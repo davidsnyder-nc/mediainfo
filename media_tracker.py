@@ -175,34 +175,36 @@ class MediaTracker:
                 f.write("=" * len(header) + "\n\n")
                 
                 # Movies section
-                f.write("PLEX MOVIES ADDED\n")
-                f.write("=" * 20 + "\n")
-                if movies:
-                    for movie in movies:
-                        content = movie_format.format(
-                            title=movie['title'],
-                            year=movie['year'],
-                            added_date=movie['added_date'],
-                            separator="-" * 30
-                        )
-                        f.write(content + "\n")
-                else:
-                    f.write("No movies added recently.\n\n")
+                if self.config.get('include_movies', True):
+                    f.write("PLEX MOVIES ADDED\n")
+                    f.write("=" * 20 + "\n")
+                    if movies:
+                        for movie in movies:
+                            content = movie_format.format(
+                                title=movie['title'],
+                                year=movie['year'],
+                                added_date=movie['added_date'],
+                                separator="-" * 30
+                            )
+                            f.write(content + "\n")
+                    else:
+                        f.write("No movies added recently.\n\n")
                 
                 # TV Shows section
-                f.write("\nPLEX TV SHOWS ADDED\n")
-                f.write("=" * 22 + "\n")
-                if tv_shows:
-                    for show in tv_shows:
-                        content = tv_format.format(
-                            title=show['title'],
-                            year=show['year'],
-                            added_date=show['added_date'],
-                            separator="-" * 30
-                        )
-                        f.write(content + "\n")
-                else:
-                    f.write("No TV shows added recently.\n\n")
+                if self.config.get('include_tv_shows', True):
+                    f.write("\nPLEX TV SHOWS ADDED\n")
+                    f.write("=" * 22 + "\n")
+                    if tv_shows:
+                        for show in tv_shows:
+                            content = tv_format.format(
+                                title=show['title'],
+                                year=show['year'],
+                                added_date=show['added_date'],
+                                separator="-" * 30
+                            )
+                            f.write(content + "\n")
+                    else:
+                        f.write("No TV shows added recently.\n\n")
                 
                 # Schedule section
                 f.write("\nSONARR TV SCHEDULE\n")

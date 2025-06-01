@@ -31,6 +31,9 @@ def save_config():
             'sonarr_url': request.form.get('sonarr_url', '').strip(),
             'sonarr_api_key': request.form.get('sonarr_api_key', '').strip(),
             'output_directory': request.form.get('output_directory', './output').strip(),
+            'include_movies': request.form.get('include_movies') == 'on',
+            'include_tv_shows': request.form.get('include_tv_shows') == 'on',
+            'include_tv_calendar': request.form.get('include_tv_calendar') == 'on',
             'github_enabled': request.form.get('github_enabled') == 'on',
             'github_repo': request.form.get('github_repo', '').strip(),
             'github_token': request.form.get('github_token', '').strip(),
@@ -42,7 +45,7 @@ def save_config():
         
         # Only update fields that have values or are explicitly set
         for key, value in config_data.items():
-            if value or key in ['github_enabled']:  # Always save boolean fields
+            if value or key in ['github_enabled', 'include_movies', 'include_tv_shows', 'include_tv_calendar']:  # Always save boolean fields
                 existing_config[key] = value
         
         # Validate GitHub fields only if GitHub is being enabled
