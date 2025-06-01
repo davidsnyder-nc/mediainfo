@@ -63,8 +63,7 @@ class MediaTracker:
             root = ET.fromstring(response.content)
             
             today = datetime.now().date()
-            # Look for content added in the last 7 days to catch more items
-            cutoff_date = today - timedelta(days=7)
+            yesterday = today - timedelta(days=1)
             
             for library in root.findall('.//Directory'):
                 library_key = library.get('key')
@@ -87,8 +86,8 @@ class MediaTracker:
                         added_at = item.get('addedAt')
                         if added_at:
                             added_date = datetime.fromtimestamp(int(added_at)).date()
-                            # Show content from last 7 days but label appropriately
-                            if added_date >= cutoff_date:
+                            # Only show content from yesterday and today
+                            if added_date >= yesterday:
                                 title = item.get('title', 'Unknown Title')
                                 year = item.get('year', 'Unknown Year')
                                 
