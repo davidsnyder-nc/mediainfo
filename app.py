@@ -54,16 +54,25 @@ def save_config():
         logging.info(f"Form data received: {dict(request.form)}")
         logging.info(f"Config data parsed: {config_data}")
         
-        # Only update fields that have values or are explicitly set
-        for key, value in config_data.items():
-            # Always save boolean fields and text customization fields (even if empty)
-            text_fields = ['report_title', 'movies_section_title', 'tv_shows_section_title', 
-                          'tv_calendar_section_title', 'no_movies_text', 'no_tv_text', 'no_schedule_text']
-            boolean_fields = ['github_enabled', 'include_movies', 'include_tv_shows', 'include_tv_calendar']
-            
-            if value or key in boolean_fields + text_fields:
-                existing_config[key] = value
-                logging.info(f"Saving {key}: {value}")
+        # Determine which form was submitted based on submitted fields
+        form_fields = set(request.form.keys())
+        
+        # Update config based on which form section was submitted
+        if 'include_movies' in form_fields or 'include_tv_shows' in form_fields or 'include_tv_calendar' in form_fields:
+            # Output Configuration form - explicitly handle all checkboxes
+            existing_config['output_directory'] = config_data.get('output_directory', existing_config.get('output_directory', './output'))
+            existing_config['include_movies'] = config_data['include_movies']
+            existing_config['include_tv_shows'] = config_data['include_tv_shows'] 
+            existing_config['include_tv_calendar'] = config_data['include_tv_calendar']
+        else:
+            # Other forms - update only fields with values or specific boolean/text fields
+            for key, value in config_data.items():
+                text_fields = ['report_title', 'movies_section_title', 'tv_shows_section_title', 
+                              'tv_calendar_section_title', 'no_movies_text', 'no_tv_text', 'no_schedule_text']
+                boolean_fields = ['github_enabled']
+                
+                if value or key in boolean_fields + text_fields:
+                    existing_config[key] = value
         
         # Validate GitHub fields only if GitHub is being enabled
         if config_data['github_enabled']:
