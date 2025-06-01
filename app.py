@@ -37,24 +37,24 @@ def save_config():
             'github_branch': request.form.get('github_branch', 'main').strip()
         }
         
-        # Validate required fields
-        required_fields = ['plex_url', 'plex_token', 'sonarr_url', 'sonarr_api_key']
-        missing_fields = [field for field in required_fields if not config_data[field]]
+        # Load existing config and merge with new data (allows partial updates)
+        existing_config = config_manager.get_config()
         
-        # Validate GitHub fields if enabled
+        # Only update fields that have values or are explicitly set
+        for key, value in config_data.items():
+            if value or key in ['github_enabled']:  # Always save boolean fields
+                existing_config[key] = value
+        
+        # Validate GitHub fields only if GitHub is being enabled
         if config_data['github_enabled']:
             github_required = ['github_repo', 'github_token']
-            missing_github = [field for field in github_required if not config_data[field]]
+            missing_github = [field for field in github_required if not existing_config.get(field)]
             if missing_github:
-                flash(f"GitHub enabled but missing: {', '.join(missing_github)}", 'error')
-                return redirect(url_for('index'))
-        
-        if missing_fields:
-            flash(f"Missing required fields: {', '.join(missing_fields)}", 'error')
-            return redirect(url_for('index'))
+                flash(f"GitHub enabled but missing: {', '.join(missing_github)}", 'warning')
+                # Don't return here - allow saving other fields
         
         # Save configuration
-        config_manager.save_config(config_data)
+        config_manager.save_config(existing_config)
         flash('Configuration saved successfully!', 'success')
         
     except Exception as e:
