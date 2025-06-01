@@ -157,8 +157,12 @@ class MediaTracker:
             schedule_format = output_format.get('schedule_format', 'Series: {series_title}\nEpisode: S{season:02d}E{episode:02d} - {episode_title}\nAir Date: {air_date}\n{separator}')
             file_naming = output_format.get('file_naming', 'date_suffix')
             
-            # Determine file names
-            if file_naming == 'date_prefix':
+            # Determine file names based on naming preference
+            if file_naming == 'custom':
+                movies_file = os.path.join(output_dir, output_format.get('custom_movie_filename', 'plex_movies.txt'))
+                tv_file = os.path.join(output_dir, output_format.get('custom_tv_filename', 'plex_tv_shows.txt'))
+                schedule_file = os.path.join(output_dir, output_format.get('custom_schedule_filename', 'sonarr_schedule.txt'))
+            elif file_naming == 'date_prefix':
                 movies_file = os.path.join(output_dir, f'{today_str}_plex_movies.txt')
                 tv_file = os.path.join(output_dir, f'{today_str}_plex_tv_shows.txt')
                 schedule_file = os.path.join(output_dir, f'{today_str}_sonarr_schedule.txt')

@@ -225,7 +225,34 @@
                                         <select class="form-select" id="file_naming" name="file_naming">
                                             <option value="date_suffix" {{ 'selected' if config.output_format.file_naming == 'date_suffix' if config.output_format else 'selected' }}>filename_2025-06-01.txt</option>
                                             <option value="date_prefix" {{ 'selected' if config.output_format.file_naming == 'date_prefix' if config.output_format else '' }}>2025-06-01_filename.txt</option>
+                                            <option value="custom" {{ 'selected' if config.output_format.file_naming == 'custom' if config.output_format else '' }}>Custom names (no dates)</option>
                                         </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="custom_filename_fields" style="display: {{ 'block' if config.output_format.file_naming == 'custom' if config.output_format else 'none' }};">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="custom_movie_filename" class="form-label">Movie Filename</label>
+                                            <input type="text" class="form-control" id="custom_movie_filename" name="custom_movie_filename" 
+                                                   value="{{ config.output_format.custom_movie_filename if config.output_format else 'plex_movies.txt' }}" placeholder="plex_movies.txt">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="custom_tv_filename" class="form-label">TV Shows Filename</label>
+                                            <input type="text" class="form-control" id="custom_tv_filename" name="custom_tv_filename" 
+                                                   value="{{ config.output_format.custom_tv_filename if config.output_format else 'plex_tv_shows.txt' }}" placeholder="plex_tv_shows.txt">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="custom_schedule_filename" class="form-label">Schedule Filename</label>
+                                            <input type="text" class="form-control" id="custom_schedule_filename" name="custom_schedule_filename" 
+                                                   value="{{ config.output_format.custom_schedule_filename if config.output_format else 'sonarr_schedule.txt' }}" placeholder="sonarr_schedule.txt">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -326,6 +353,12 @@ Air Date: 2025-06-01
         document.getElementById('github_enabled').addEventListener('change', function() {
             const githubFields = document.getElementById('github_fields');
             githubFields.style.display = this.checked ? 'block' : 'none';
+        });
+        
+        // Toggle custom filename fields visibility
+        document.getElementById('file_naming').addEventListener('change', function() {
+            const customFields = document.getElementById('custom_filename_fields');
+            customFields.style.display = this.value === 'custom' ? 'block' : 'none';
         });
     </script>
 </body>

@@ -23,7 +23,10 @@ class ConfigManager:
                 'schedule_format': 'Series: {series_title}\nEpisode: S{season:02d}E{episode:02d} - {episode_title}\nAir Date: {air_date}\n{separator}',
                 'include_timestamps': True,
                 'include_descriptions': False,
-                'file_naming': 'date_suffix'
+                'file_naming': 'date_suffix',
+                'custom_movie_filename': 'plex_movies.txt',
+                'custom_tv_filename': 'plex_tv_shows.txt',
+                'custom_schedule_filename': 'sonarr_schedule.txt'
             }
         }
     

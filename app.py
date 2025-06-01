@@ -242,7 +242,10 @@ def save_output_format():
             'schedule_format': request.form.get('schedule_format', '').strip(),
             'include_timestamps': request.form.get('include_timestamps') == 'on',
             'include_descriptions': request.form.get('include_descriptions') == 'on',
-            'file_naming': request.form.get('file_naming', 'date_suffix').strip()
+            'file_naming': request.form.get('file_naming', 'date_suffix').strip(),
+            'custom_movie_filename': request.form.get('custom_movie_filename', 'plex_movies.txt').strip(),
+            'custom_tv_filename': request.form.get('custom_tv_filename', 'plex_tv_shows.txt').strip(),
+            'custom_schedule_filename': request.form.get('custom_schedule_filename', 'sonarr_schedule.txt').strip()
         }
         
         config_manager.save_config(config)
