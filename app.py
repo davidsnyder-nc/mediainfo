@@ -255,5 +255,22 @@ def save_output_format():
     
     return redirect(url_for('index'))
 
+@app.route('/clear_config')
+def clear_config():
+    """Clear all saved configuration"""
+    try:
+        import os
+        config_file = 'config.json'
+        if os.path.exists(config_file):
+            os.remove(config_file)
+            flash('Configuration cleared successfully! You can now reconfigure from scratch.', 'success')
+        else:
+            flash('No configuration file found to clear.', 'info')
+    except Exception as e:
+        logging.error(f"Error clearing configuration: {str(e)}")
+        flash(f'Error clearing configuration: {str(e)}', 'error')
+    
+    return redirect(url_for('index'))
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3038, debug=True)

@@ -157,17 +157,23 @@
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
                                 <a href="{{ url_for('test_connection') }}" class="btn btn-secondary w-100">
                                     <i class="fas fa-plug me-2"></i>Test API Connections
                                 </a>
                                 <small class="form-text">Verify that both Plex and Sonarr APIs are accessible</small>
                             </div>
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
                                 <a href="{{ url_for('run_daily_sync') }}" class="btn btn-success w-100">
                                     <i class="fas fa-sync-alt me-2"></i>Run Daily Sync
                                 </a>
                                 <small class="form-text">Manually trigger the daily content sync process</small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <a href="{{ url_for('clear_config') }}" class="btn btn-warning w-100" onclick="return confirm('Are you sure you want to clear all configuration? This cannot be undone.')">
+                                    <i class="fas fa-trash me-2"></i>Clear Configuration
+                                </a>
+                                <small class="form-text">Reset all settings and start fresh</small>
                             </div>
                         </div>
                     </div>
