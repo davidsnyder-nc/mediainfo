@@ -113,18 +113,15 @@ def plex_auth():
         client_identifier = str(uuid.uuid4())
         session['plex_client_id'] = client_identifier
         
-        # Use the same method as device pairing for 4-digit codes
+        # Use the same method as your working implementation
         headers = {
             'Accept': 'application/json',
             'X-Plex-Product': 'Media Tracker',
-            'X-Plex-Version': '1.0',
-            'X-Plex-Client-Identifier': client_identifier,
-            'X-Plex-Platform': 'Linux',
-            'X-Plex-Model': 'bundled'
+            'X-Plex-Client-Identifier': client_identifier
         }
         
-        # Request PIN without strong parameter to get shorter code
-        response = requests.post('https://plex.tv/api/v2/pins', headers=headers)
+        # Request PIN using .json endpoint like your working code
+        response = requests.post('https://plex.tv/api/v2/pins.json', headers=headers)
         
         if response.status_code == 201:
             pin_info = response.json()
@@ -154,9 +151,10 @@ def plex_auth_check():
             flash('Authentication session expired', 'error')
             return redirect(url_for('index'))
         
-        # Check if the PIN has been authorized
-        response = requests.get(f'https://plex.tv/api/v2/pins/{pin_id}', headers={
+        # Check if the PIN has been authorized using .json endpoint
+        response = requests.get(f'https://plex.tv/api/v2/pins/{pin_id}.json', headers={
             'Accept': 'application/json',
+            'X-Plex-Product': 'Media Tracker',
             'X-Plex-Client-Identifier': client_id
         })
         
@@ -165,75 +163,18 @@ def plex_auth_check():
             pin_data = response.json()
             logging.debug(f"PIN check data: {pin_data}")
             if pin_data.get('authToken'):
-                # Get user's Plex servers
-                servers_response = requests.get('https://plex.tv/api/v2/resources', headers={
-                    'Accept': 'application/json',
-                    'X-Plex-Token': pin_data['authToken']
-                })
+                # Save the token directly like your working implementation
+                config = config_manager.get_config()
+                config['plex_token'] = pin_data['authToken']
+                config_manager.save_config(config)
                 
-                if servers_response.status_code == 200:
-                    servers = servers_response.json()
-                    logging.debug(f"Found {len(servers)} total resources")
-                    plex_servers = [s for s in servers if s.get('product') == 'Plex Media Server' and s.get('owned') == '1']
-                    logging.debug(f"Found {len(plex_servers)} owned Plex servers")
-                    
-                    if plex_servers:
-                        # Use the first owned server
-                        server = plex_servers[0]
-                        logging.debug(f"Using server: {server.get('name')}")
-                        connections = server.get('connections', [])
-                        logging.debug(f"Server has {len(connections)} connections")
-                        
-                        # Try remote connections first, then local
-                        remote_connections = [c for c in connections if c.get('local') != '1']
-                        all_connections = remote_connections + connections
-                        
-                        working_url = None
-                        for connection in all_connections:
-                            plex_url = f"{connection['protocol']}://{connection['address']}:{connection['port']}"
-                            logging.debug(f"Testing connection: {plex_url}")
-                            
-                            try:
-                                test_response = requests.get(f"{plex_url}/identity", 
-                                                           headers={'X-Plex-Token': pin_data['authToken']}, 
-                                                           timeout=5)
-                                if test_response.status_code == 200:
-                                    working_url = plex_url
-                                    logging.debug(f"Connection successful: {plex_url}")
-                                    break
-                            except Exception as e:
-                                logging.debug(f"Connection failed: {e}")
-                                continue
-                        
-                        if working_url:
-                            # Save the configuration
-                            config = config_manager.get_config()
-                            config['plex_url'] = working_url
-                            config['plex_token'] = pin_data['authToken']
-                            config_manager.save_config(config)
-                            
-                            # Clear session data
-                            session.pop('plex_pin_id', None)
-                            session.pop('plex_pin_code', None)
-                            session.pop('plex_client_id', None)
-                            
-                            flash('Plex authentication successful!', 'success')
-                            return redirect(url_for('index'))
-                        else:
-                            # Save just the token for local use
-                            config = config_manager.get_config()
-                            config['plex_token'] = pin_data['authToken']
-                            config_manager.save_config(config)
-                            
-                            # Clear session data
-                            session.pop('plex_pin_id', None)
-                            session.pop('plex_pin_code', None)
-                            session.pop('plex_client_id', None)
-                            
-                            flash('Plex token saved! Please manually enter your Plex server URL in the configuration.', 'warning')
-                            return redirect(url_for('index'))
-                    else:
-                        flash('No owned Plex servers found', 'error')
+                # Clear session data
+                session.pop('plex_pin_id', None)
+                session.pop('plex_pin_code', None)
+                session.pop('plex_client_id', None)
+                
+                flash('Plex authentication successful! Token saved.', 'success')
+                return redirect(url_for('index'))
             else:
                 flash('Authentication not yet complete. Please enter the code in Plex and try again.', 'warning')
         else:
