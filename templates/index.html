@@ -6,6 +6,36 @@
     <title>Media Tracker Configuration</title>
     <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: var(--bs-secondary-bg);
+        }
+        .config-section {
+            margin-bottom: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .plex-card .card-header {
+            background-color: rgba(255, 152, 0, 0.1);
+            border-bottom-color: rgba(255, 152, 0, 0.2);
+        }
+        .sonarr-card .card-header {
+            background-color: rgba(76, 175, 80, 0.1);
+            border-bottom-color: rgba(76, 175, 80, 0.2);
+        }
+        .output-card .card-header {
+            background-color: rgba(33, 150, 243, 0.1);
+            border-bottom-color: rgba(33, 150, 243, 0.2);
+        }
+        .text-card .card-header {
+            background-color: rgba(156, 39, 176, 0.1);
+            border-bottom-color: rgba(156, 39, 176, 0.2);
+        }
+        .github-card .card-header {
+            background-color: rgba(108, 117, 125, 0.1);
+            border-bottom-color: rgba(108, 117, 125, 0.2);
+        }
+    </style>
 </head>
 <body>
     <div class="container mt-4">
@@ -32,7 +62,7 @@
 
                         <form method="POST" action="{{ url_for('save_config') }}">
                             <!-- Plex Configuration Card -->
-                            <div class="card mb-4">
+                            <div class="card mb-4 config-section plex-card">
                                 <div class="card-header">
                                     <h5 class="card-title mb-0"><i class="fas fa-play me-2"></i>Plex Configuration</h5>
                                 </div>
@@ -79,7 +109,7 @@
                             </div>
 
                             <!-- Sonarr Configuration Card -->
-                            <div class="card mb-4">
+                            <div class="card mb-4 config-section sonarr-card">
                                 <div class="card-header">
                                     <h5 class="card-title mb-0"><i class="fas fa-satellite-dish me-2"></i>Sonarr Configuration</h5>
                                 </div>
@@ -106,7 +136,7 @@
                             </div>
 
                             <!-- Output Configuration Card -->
-                            <div class="card mb-4">
+                            <div class="card mb-4 config-section output-card">
                                 <div class="card-header">
                                     <h5 class="card-title mb-0"><i class="fas fa-folder me-2"></i>Output Configuration</h5>
                                 </div>
@@ -149,7 +179,7 @@
                             </div>
 
                             <!-- Text Customization Card -->
-                            <div class="card mb-4">
+                            <div class="card mb-4 config-section text-card">
                                 <div class="card-header">
                                     <h5 class="card-title mb-0"><i class="fas fa-font me-2"></i>Text Customization</h5>
                                 </div>
@@ -199,7 +229,7 @@
                             </div>
 
                             <!-- GitHub Integration Card -->
-                            <div class="card mb-4">
+                            <div class="card mb-4 config-section github-card">
                                 <div class="card-header">
                                     <h5 class="card-title mb-0"><i class="fab fa-github me-2"></i>GitHub Integration (Optional)</h5>
                                 </div>
