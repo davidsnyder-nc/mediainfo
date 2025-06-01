@@ -50,13 +50,20 @@ def save_config():
         # Load existing config and merge with new data (allows partial updates)
         existing_config = config_manager.get_config()
         
+        # Debug logging
+        logging.info(f"Form data received: {dict(request.form)}")
+        logging.info(f"Config data parsed: {config_data}")
+        
         # Only update fields that have values or are explicitly set
         for key, value in config_data.items():
             # Always save boolean fields and text customization fields (even if empty)
             text_fields = ['report_title', 'movies_section_title', 'tv_shows_section_title', 
                           'tv_calendar_section_title', 'no_movies_text', 'no_tv_text', 'no_schedule_text']
-            if value or key in ['github_enabled', 'include_movies', 'include_tv_shows', 'include_tv_calendar'] + text_fields:
+            boolean_fields = ['github_enabled', 'include_movies', 'include_tv_shows', 'include_tv_calendar']
+            
+            if value or key in boolean_fields + text_fields:
                 existing_config[key] = value
+                logging.info(f"Saving {key}: {value}")
         
         # Validate GitHub fields only if GitHub is being enabled
         if config_data['github_enabled']:
