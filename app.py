@@ -129,6 +129,7 @@ def plex_auth():
         
         if response.status_code == 201:
             pin_info = response.json()
+            logging.debug(f"Plex PIN response: {pin_info}")
             session['plex_pin_id'] = pin_info['id']
             session['plex_pin_code'] = pin_info['code']
             
