@@ -207,21 +207,22 @@ class MediaTracker:
                         f.write("No TV shows added recently.\n\n")
                 
                 # Schedule section
-                f.write("\nSONARR TV SCHEDULE\n")
-                f.write("=" * 19 + "\n")
-                if scheduled_shows:
-                    for show in scheduled_shows:
-                        content = schedule_format.format(
-                            series_title=show['series_title'],
-                            episode_title=show['episode_title'],
-                            season=show['season'],
-                            episode=show['episode'],
-                            air_date=show['air_date'],
-                            separator="-" * 30
-                        )
-                        f.write(content + "\n")
-                else:
-                    f.write("No shows scheduled for today.\n")
+                if self.config.get('include_tv_calendar', True):
+                    f.write("\nSONARR TV SCHEDULE\n")
+                    f.write("=" * 19 + "\n")
+                    if scheduled_shows:
+                        for show in scheduled_shows:
+                            content = schedule_format.format(
+                                series_title=show['series_title'],
+                                episode_title=show['episode_title'],
+                                season=show['season'],
+                                episode=show['episode'],
+                                air_date=show['air_date'],
+                                separator="-" * 30
+                            )
+                            f.write(content + "\n")
+                    else:
+                        f.write("No shows scheduled for today.\n")
             
             logging.info(f"Files written successfully to {output_dir}")
             
