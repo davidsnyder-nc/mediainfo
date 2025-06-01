@@ -173,20 +173,42 @@ def plex_auth_check():
                 
                 if servers_response.status_code == 200:
                     servers = servers_response.json()
+                    logging.debug(f"Found {len(servers)} total resources")
                     plex_servers = [s for s in servers if s.get('product') == 'Plex Media Server' and s.get('owned') == '1']
+                    logging.debug(f"Found {len(plex_servers)} owned Plex servers")
                     
                     if plex_servers:
                         # Use the first owned server
                         server = plex_servers[0]
+                        logging.debug(f"Using server: {server.get('name')}")
                         connections = server.get('connections', [])
-                        local_connection = next((c for c in connections if c.get('local') == '1'), connections[0] if connections else None)
+                        logging.debug(f"Server has {len(connections)} connections")
                         
-                        if local_connection:
-                            plex_url = f"{local_connection['protocol']}://{local_connection['address']}:{local_connection['port']}"
+                        # Try remote connections first, then local
+                        remote_connections = [c for c in connections if c.get('local') != '1']
+                        all_connections = remote_connections + connections
+                        
+                        working_url = None
+                        for connection in all_connections:
+                            plex_url = f"{connection['protocol']}://{connection['address']}:{connection['port']}"
+                            logging.debug(f"Testing connection: {plex_url}")
                             
+                            try:
+                                test_response = requests.get(f"{plex_url}/identity", 
+                                                           headers={'X-Plex-Token': pin_data['authToken']}, 
+                                                           timeout=5)
+                                if test_response.status_code == 200:
+                                    working_url = plex_url
+                                    logging.debug(f"Connection successful: {plex_url}")
+                                    break
+                            except Exception as e:
+                                logging.debug(f"Connection failed: {e}")
+                                continue
+                        
+                        if working_url:
                             # Save the configuration
                             config = config_manager.get_config()
-                            config['plex_url'] = plex_url
+                            config['plex_url'] = working_url
                             config['plex_token'] = pin_data['authToken']
                             config_manager.save_config(config)
                             
