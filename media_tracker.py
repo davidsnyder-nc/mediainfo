@@ -11,7 +11,6 @@ class MediaTracker:
     def __init__(self, config):
         self.config = config
         self.session = requests.Session()
-        self.session.timeout = 30
     
     def test_plex_connection(self):
         """Test connection to Plex API"""
@@ -136,55 +135,90 @@ class MediaTracker:
         return scheduled_shows
     
     def write_to_files(self, movies, tv_shows, scheduled_shows):
-        """Write collected data to text files"""
+        """Write collected data to text files using custom format"""
         try:
             output_dir = self.config['output_directory']
             os.makedirs(output_dir, exist_ok=True)
             
             today_str = datetime.now().strftime('%Y-%m-%d')
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S') if self.config.get('output_format', {}).get('include_timestamps', True) else ''
+            
+            # Get custom formats
+            output_format = self.config.get('output_format', {})
+            movie_format = output_format.get('movie_format', 'Title: {title}\nYear: {year}\nAdded: {added_date}\n{separator}')
+            tv_format = output_format.get('tv_format', 'Title: {title}\nYear: {year}\nAdded: {added_date}\n{separator}')
+            schedule_format = output_format.get('schedule_format', 'Series: {series_title}\nEpisode: S{season:02d}E{episode:02d} - {episode_title}\nAir Date: {air_date}\n{separator}')
+            file_naming = output_format.get('file_naming', 'date_suffix')
+            
+            # Determine file names
+            if file_naming == 'date_prefix':
+                movies_file = os.path.join(output_dir, f'{today_str}_plex_movies.txt')
+                tv_file = os.path.join(output_dir, f'{today_str}_plex_tv_shows.txt')
+                schedule_file = os.path.join(output_dir, f'{today_str}_sonarr_schedule.txt')
+            else:  # date_suffix (default)
+                movies_file = os.path.join(output_dir, f'plex_movies_{today_str}.txt')
+                tv_file = os.path.join(output_dir, f'plex_tv_shows_{today_str}.txt')
+                schedule_file = os.path.join(output_dir, f'sonarr_schedule_{today_str}.txt')
             
             # Write movies file
-            movies_file = os.path.join(output_dir, f'plex_movies_{today_str}.txt')
             with open(movies_file, 'w') as f:
-                f.write(f"Plex Movies Added - {today_str}\n")
-                f.write("=" * 40 + "\n\n")
+                header = f"Plex Movies Added - {today_str}"
+                if timestamp:
+                    header += f" (Generated: {timestamp})"
+                f.write(header + "\n")
+                f.write("=" * len(header) + "\n\n")
                 
                 if movies:
                     for movie in movies:
-                        f.write(f"Title: {movie['title']}\n")
-                        f.write(f"Year: {movie['year']}\n")
-                        f.write(f"Added: {movie['added_date']}\n")
-                        f.write("-" * 30 + "\n")
+                        content = movie_format.format(
+                            title=movie['title'],
+                            year=movie['year'],
+                            added_date=movie['added_date'],
+                            separator="-" * 30
+                        )
+                        f.write(content + "\n")
                 else:
                     f.write("No movies added today.\n")
             
             # Write TV shows file
-            tv_file = os.path.join(output_dir, f'plex_tv_shows_{today_str}.txt')
             with open(tv_file, 'w') as f:
-                f.write(f"Plex TV Shows Added - {today_str}\n")
-                f.write("=" * 40 + "\n\n")
+                header = f"Plex TV Shows Added - {today_str}"
+                if timestamp:
+                    header += f" (Generated: {timestamp})"
+                f.write(header + "\n")
+                f.write("=" * len(header) + "\n\n")
                 
                 if tv_shows:
                     for show in tv_shows:
-                        f.write(f"Title: {show['title']}\n")
-                        f.write(f"Year: {show['year']}\n")
-                        f.write(f"Added: {show['added_date']}\n")
-                        f.write("-" * 30 + "\n")
+                        content = tv_format.format(
+                            title=show['title'],
+                            year=show['year'],
+                            added_date=show['added_date'],
+                            separator="-" * 30
+                        )
+                        f.write(content + "\n")
                 else:
                     f.write("No TV shows added today.\n")
             
             # Write scheduled shows file
-            schedule_file = os.path.join(output_dir, f'sonarr_schedule_{today_str}.txt')
             with open(schedule_file, 'w') as f:
-                f.write(f"Sonarr TV Schedule - {today_str}\n")
-                f.write("=" * 40 + "\n\n")
+                header = f"Sonarr TV Schedule - {today_str}"
+                if timestamp:
+                    header += f" (Generated: {timestamp})"
+                f.write(header + "\n")
+                f.write("=" * len(header) + "\n\n")
                 
                 if scheduled_shows:
                     for show in scheduled_shows:
-                        f.write(f"Series: {show['series_title']}\n")
-                        f.write(f"Episode: S{show['season']:02d}E{show['episode']:02d} - {show['episode_title']}\n")
-                        f.write(f"Air Date: {show['air_date']}\n")
-                        f.write("-" * 30 + "\n")
+                        content = schedule_format.format(
+                            series_title=show['series_title'],
+                            episode_title=show['episode_title'],
+                            season=show['season'],
+                            episode=show['episode'],
+                            air_date=show['air_date'],
+                            separator="-" * 30
+                        )
+                        f.write(content + "\n")
                 else:
                     f.write("No shows scheduled for today.\n")
             

@@ -34,16 +34,32 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <h5><i class="fas fa-play me-2"></i>Plex Configuration</h5>
+                                    
+                                    {% if not config.plex_url or not config.plex_token %}
+                                    <div class="mb-3">
+                                        <div class="d-grid">
+                                            <a href="{{ url_for('plex_auth') }}" class="btn btn-primary">
+                                                <i class="fas fa-link me-2"></i>Authenticate with Plex
+                                            </a>
+                                        </div>
+                                        <div class="form-text">Use the 4-digit code method for easy setup</div>
+                                    </div>
+                                    
+                                    <div class="text-center my-3">
+                                        <small class="text-muted">OR</small>
+                                    </div>
+                                    {% endif %}
+                                    
                                     <div class="mb-3">
                                         <label for="plex_url" class="form-label">Plex URL</label>
                                         <input type="url" class="form-control" id="plex_url" name="plex_url" 
-                                               value="{{ config.plex_url }}" placeholder="http://localhost:32400" required>
+                                               value="{{ config.plex_url }}" placeholder="http://localhost:32400" {% if not config.plex_url %}{% else %}required{% endif %}>
                                         <div class="form-text">Include http:// or https:// and port number</div>
                                     </div>
                                     <div class="mb-3">
                                         <label for="plex_token" class="form-label">Plex Token</label>
                                         <input type="text" class="form-control" id="plex_token" name="plex_token" 
-                                               value="{{ config.plex_token }}" placeholder="Your Plex authentication token" required>
+                                               value="{{ config.plex_token }}" placeholder="Your Plex authentication token" {% if not config.plex_token %}{% else %}required{% endif %}>
                                         <div class="form-text">
                                             <a href="https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/" 
                                                target="_blank" class="text-decoration-none">
@@ -113,6 +129,132 @@
                     </div>
                 </div>
                 
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-cog me-2"></i>Output Format Customization
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('save_output_format') }}">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <h6><i class="fas fa-film me-2"></i>Movie Format</h6>
+                                    <div class="mb-3">
+                                        <label for="movie_format" class="form-label">Template</label>
+                                        <textarea class="form-control" id="movie_format" name="movie_format" rows="3" placeholder="Title: {title}&#10;Year: {year}&#10;Added: {added_date}&#10;{separator}">{{ config.output_format.movie_format if config.output_format else 'Title: {title}\nYear: {year}\nAdded: {added_date}\n{separator}' }}</textarea>
+                                        <div class="form-text">Variables: {title}, {year}, {added_date}, {separator}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <h6><i class="fas fa-tv me-2"></i>TV Show Format</h6>
+                                    <div class="mb-3">
+                                        <label for="tv_format" class="form-label">Template</label>
+                                        <textarea class="form-control" id="tv_format" name="tv_format" rows="3" placeholder="Title: {title}&#10;Year: {year}&#10;Added: {added_date}&#10;{separator}">{{ config.output_format.tv_format if config.output_format else 'Title: {title}\nYear: {year}\nAdded: {added_date}\n{separator}' }}</textarea>
+                                        <div class="form-text">Variables: {title}, {year}, {added_date}, {separator}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <h6><i class="fas fa-calendar me-2"></i>Schedule Format</h6>
+                                    <div class="mb-3">
+                                        <label for="schedule_format" class="form-label">Template</label>
+                                        <textarea class="form-control" id="schedule_format" name="schedule_format" rows="3" placeholder="Series: {series_title}&#10;Episode: S{season:02d}E{episode:02d} - {episode_title}&#10;Air Date: {air_date}&#10;{separator}">{{ config.output_format.schedule_format if config.output_format else 'Series: {series_title}\nEpisode: S{season:02d}E{episode:02d} - {episode_title}\nAir Date: {air_date}\n{separator}' }}</textarea>
+                                        <div class="form-text">Variables: {series_title}, {episode_title}, {season}, {episode}, {air_date}, {separator}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="include_timestamps" name="include_timestamps" {{ 'checked' if config.output_format.include_timestamps if config.output_format else 'checked' }}>
+                                            <label class="form-check-label" for="include_timestamps">
+                                                Include timestamps in headers
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="file_naming" class="form-label">File Naming</label>
+                                        <select class="form-select" id="file_naming" name="file_naming">
+                                            <option value="date_suffix" {{ 'selected' if config.output_format.file_naming == 'date_suffix' if config.output_format else 'selected' }}>filename_2025-06-01.txt</option>
+                                            <option value="date_prefix" {{ 'selected' if config.output_format.file_naming == 'date_prefix' if config.output_format else '' }}>2025-06-01_filename.txt</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-secondary">
+                                    <i class="fas fa-save me-2"></i>Save Output Format
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-eye me-2"></i>Output Preview
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <h6>Movies Example:</h6>
+                                <div class="bg-dark p-3 rounded small">
+                                    <code style="white-space: pre-line;">Plex Movies Added - 2025-06-01 (Generated: 2025-06-01 09:15:23)
+========================================================================
+
+Title: Dune: Part Two
+Year: 2024
+Added: 2025-06-01
+------------------------------
+Title: The Batman
+Year: 2022
+Added: 2025-05-31
+------------------------------</code>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <h6>TV Shows Example:</h6>
+                                <div class="bg-dark p-3 rounded small">
+                                    <code style="white-space: pre-line;">Plex TV Shows Added - 2025-06-01 (Generated: 2025-06-01 09:15:23)
+===========================================================================
+
+Title: House of the Dragon
+Year: 2022
+Added: 2025-06-01
+------------------------------
+Title: The Bear
+Year: 2022
+Added: 2025-05-31
+------------------------------</code>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <h6>Schedule Example:</h6>
+                                <div class="bg-dark p-3 rounded small">
+                                    <code style="white-space: pre-line;">Sonarr TV Schedule - 2025-06-01 (Generated: 2025-06-01 09:15:23)
+=======================================================================
+
+Series: House of the Dragon
+Episode: S02E04 - The Red Dragon and the Gold
+Air Date: 2025-06-01
+------------------------------
+Series: The Boys
+Episode: S04E08 - Assassination Run
+Air Date: 2025-06-01
+------------------------------</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card mt-4">
                     <div class="card-header">
                         <h5 class="card-title mb-0">

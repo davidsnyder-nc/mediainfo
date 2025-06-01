@@ -12,7 +12,15 @@ class ConfigManager:
             'plex_token': '',
             'sonarr_url': '',
             'sonarr_api_key': '',
-            'output_directory': './output'
+            'output_directory': './output',
+            'output_format': {
+                'movie_format': 'Title: {title}\nYear: {year}\nAdded: {added_date}\n{separator}',
+                'tv_format': 'Title: {title}\nYear: {year}\nAdded: {added_date}\n{separator}',
+                'schedule_format': 'Series: {series_title}\nEpisode: S{season:02d}E{episode:02d} - {episode_title}\nAir Date: {air_date}\n{separator}',
+                'include_timestamps': True,
+                'include_descriptions': False,
+                'file_naming': 'date_suffix'
+            }
         }
     
     def get_config(self):

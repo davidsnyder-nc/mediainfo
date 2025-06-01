@@ -1,6 +1,8 @@
 import os
 import logging
-from flask import Flask, render_template, request, flash, redirect, url_for
+import uuid
+import requests
+from flask import Flask, render_template, request, flash, redirect, url_for, session
 from config import ConfigManager
 from media_tracker import MediaTracker
 
@@ -75,6 +77,109 @@ def test_connection():
     
     return redirect(url_for('index'))
 
+@app.route('/plex_auth')
+def plex_auth():
+    """Start Plex OAuth flow"""
+    try:
+        # Generate a unique identifier for this auth request
+        client_identifier = str(uuid.uuid4())
+        session['plex_client_id'] = client_identifier
+        
+        # Request a PIN from Plex
+        pin_data = {
+            'strong': 'true',
+            'X-Plex-Product': 'Media Tracker',
+            'X-Plex-Version': '1.0',
+            'X-Plex-Client-Identifier': client_identifier,
+            'X-Plex-Model': 'Web',
+            'X-Plex-Platform': 'Web'
+        }
+        
+        response = requests.post('https://plex.tv/api/v2/pins', headers={
+            'Accept': 'application/json'
+        }, data=pin_data)
+        
+        if response.status_code == 201:
+            pin_info = response.json()
+            session['plex_pin_id'] = pin_info['id']
+            session['plex_pin_code'] = pin_info['code']
+            
+            # Return the PIN code to display to user
+            return render_template('plex_auth.html', pin_code=pin_info['code'])
+        else:
+            flash('Failed to get Plex authentication code', 'error')
+            
+    except Exception as e:
+        logging.error(f"Error starting Plex auth: {str(e)}")
+        flash(f'Error starting Plex authentication: {str(e)}', 'error')
+    
+    return redirect(url_for('index'))
+
+@app.route('/plex_auth_check')
+def plex_auth_check():
+    """Check if Plex authentication is complete"""
+    try:
+        pin_id = session.get('plex_pin_id')
+        client_id = session.get('plex_client_id')
+        
+        if not pin_id or not client_id:
+            flash('Authentication session expired', 'error')
+            return redirect(url_for('index'))
+        
+        # Check if the PIN has been authorized
+        response = requests.get(f'https://plex.tv/api/v2/pins/{pin_id}', headers={
+            'Accept': 'application/json',
+            'X-Plex-Client-Identifier': client_id
+        })
+        
+        if response.status_code == 200:
+            pin_data = response.json()
+            if pin_data.get('authToken'):
+                # Get user's Plex servers
+                servers_response = requests.get('https://plex.tv/api/v2/resources', headers={
+                    'Accept': 'application/json',
+                    'X-Plex-Token': pin_data['authToken']
+                })
+                
+                if servers_response.status_code == 200:
+                    servers = servers_response.json()
+                    plex_servers = [s for s in servers if s.get('product') == 'Plex Media Server' and s.get('owned') == '1']
+                    
+                    if plex_servers:
+                        # Use the first owned server
+                        server = plex_servers[0]
+                        connections = server.get('connections', [])
+                        local_connection = next((c for c in connections if c.get('local') == '1'), connections[0] if connections else None)
+                        
+                        if local_connection:
+                            plex_url = f"{local_connection['protocol']}://{local_connection['address']}:{local_connection['port']}"
+                            
+                            # Save the configuration
+                            config = config_manager.get_config()
+                            config['plex_url'] = plex_url
+                            config['plex_token'] = pin_data['authToken']
+                            config_manager.save_config(config)
+                            
+                            # Clear session data
+                            session.pop('plex_pin_id', None)
+                            session.pop('plex_pin_code', None)
+                            session.pop('plex_client_id', None)
+                            
+                            flash('Plex authentication successful!', 'success')
+                            return redirect(url_for('index'))
+                
+                flash('Could not find accessible Plex server', 'error')
+            else:
+                flash('Authentication not yet complete. Please enter the code in Plex and try again.', 'warning')
+        else:
+            flash('Error checking authentication status', 'error')
+            
+    except Exception as e:
+        logging.error(f"Error checking Plex auth: {str(e)}")
+        flash(f'Error checking Plex authentication: {str(e)}', 'error')
+    
+    return redirect(url_for('index'))
+
 @app.route('/run_daily_sync')
 def run_daily_sync():
     """Manually trigger daily sync"""
@@ -93,6 +198,31 @@ def run_daily_sync():
     except Exception as e:
         logging.error(f"Error running daily sync: {str(e)}")
         flash(f'Error running daily sync: {str(e)}', 'error')
+    
+    return redirect(url_for('index'))
+
+@app.route('/save_output_format', methods=['POST'])
+def save_output_format():
+    """Save custom output format settings"""
+    try:
+        config = config_manager.get_config()
+        
+        # Save output format preferences
+        config['output_format'] = {
+            'movie_format': request.form.get('movie_format', '').strip(),
+            'tv_format': request.form.get('tv_format', '').strip(),
+            'schedule_format': request.form.get('schedule_format', '').strip(),
+            'include_timestamps': request.form.get('include_timestamps') == 'on',
+            'include_descriptions': request.form.get('include_descriptions') == 'on',
+            'file_naming': request.form.get('file_naming', 'date_suffix').strip()
+        }
+        
+        config_manager.save_config(config)
+        flash('Output format saved successfully!', 'success')
+        
+    except Exception as e:
+        logging.error(f"Error saving output format: {str(e)}")
+        flash(f'Error saving output format: {str(e)}', 'error')
     
     return redirect(url_for('index'))
 
