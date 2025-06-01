@@ -13,6 +13,10 @@ class ConfigManager:
             'sonarr_url': '',
             'sonarr_api_key': '',
             'output_directory': './output',
+            'github_enabled': False,
+            'github_repo': '',
+            'github_token': '',
+            'github_branch': 'main',
             'output_format': {
                 'movie_format': 'Title: {title}\nYear: {year}\nAdded: {added_date}\n{separator}',
                 'tv_format': 'Title: {title}\nYear: {year}\nAdded: {added_date}\n{separator}',

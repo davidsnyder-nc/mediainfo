@@ -30,12 +30,24 @@ def save_config():
             'plex_token': request.form.get('plex_token', '').strip(),
             'sonarr_url': request.form.get('sonarr_url', '').strip(),
             'sonarr_api_key': request.form.get('sonarr_api_key', '').strip(),
-            'output_directory': request.form.get('output_directory', './output').strip()
+            'output_directory': request.form.get('output_directory', './output').strip(),
+            'github_enabled': request.form.get('github_enabled') == 'on',
+            'github_repo': request.form.get('github_repo', '').strip(),
+            'github_token': request.form.get('github_token', '').strip(),
+            'github_branch': request.form.get('github_branch', 'main').strip()
         }
         
         # Validate required fields
         required_fields = ['plex_url', 'plex_token', 'sonarr_url', 'sonarr_api_key']
         missing_fields = [field for field in required_fields if not config_data[field]]
+        
+        # Validate GitHub fields if enabled
+        if config_data['github_enabled']:
+            github_required = ['github_repo', 'github_token']
+            missing_github = [field for field in github_required if not config_data[field]]
+            if missing_github:
+                flash(f"GitHub enabled but missing: {', '.join(missing_github)}", 'error')
+                return redirect(url_for('index'))
         
         if missing_fields:
             flash(f"Missing required fields: {', '.join(missing_fields)}", 'error')
@@ -61,15 +73,31 @@ def test_connection():
         # Test both APIs
         plex_status = tracker.test_plex_connection()
         sonarr_status = tracker.test_sonarr_connection()
+        github_status = tracker.test_github_connection() if config.get('github_enabled', False) else True
         
-        if plex_status and sonarr_status:
-            flash('Both API connections successful!', 'success')
-        elif plex_status:
-            flash('Plex connection successful, Sonarr connection failed!', 'warning')
-        elif sonarr_status:
-            flash('Sonarr connection successful, Plex connection failed!', 'warning')
+        success_count = sum([plex_status, sonarr_status, github_status])
+        total_tests = 2 + (1 if config.get('github_enabled', False) else 0)
+        
+        if success_count == total_tests:
+            flash('All API connections successful!', 'success')
+        elif success_count > 0:
+            status_msgs = []
+            if plex_status:
+                status_msgs.append('Plex: OK')
+            else:
+                status_msgs.append('Plex: Failed')
+            if sonarr_status:
+                status_msgs.append('Sonarr: OK')
+            else:
+                status_msgs.append('Sonarr: Failed')
+            if config.get('github_enabled', False):
+                if github_status:
+                    status_msgs.append('GitHub: OK')
+                else:
+                    status_msgs.append('GitHub: Failed')
+            flash(f"Connection status: {' | '.join(status_msgs)}", 'warning')
         else:
-            flash('Both API connections failed!', 'error')
+            flash('All API connections failed!', 'error')
             
     except Exception as e:
         logging.error(f"Error testing connections: {str(e)}")

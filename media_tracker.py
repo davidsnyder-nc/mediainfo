@@ -2,6 +2,7 @@ import requests
 import json
 import os
 import logging
+import base64
 from datetime import datetime, timedelta
 from urllib.parse import urljoin
 
@@ -223,10 +224,106 @@ class MediaTracker:
                     f.write("No shows scheduled for today.\n")
             
             logging.info(f"Files written successfully to {output_dir}")
+            
+            # Upload to GitHub if enabled
+            if self.config.get('github_enabled', False):
+                self.upload_to_github([movies_file, tv_file, schedule_file])
+            
             return True
             
         except Exception as e:
             logging.error(f"Error writing files: {str(e)}")
+            return False
+    
+    def test_github_connection(self):
+        """Test GitHub API connection"""
+        try:
+            if not self.config.get('github_enabled', False):
+                return False
+                
+            repo = self.config.get('github_repo', '')
+            token = self.config.get('github_token', '')
+            
+            if not repo or not token:
+                return False
+            
+            # Test by getting repository info
+            url = f"https://api.github.com/repos/{repo}"
+            headers = {
+                'Authorization': f'token {token}',
+                'Accept': 'application/vnd.github.v3+json'
+            }
+            
+            response = self.session.get(url, headers=headers, timeout=30)
+            response.raise_for_status()
+            
+            logging.info("GitHub connection successful")
+            return True
+            
+        except Exception as e:
+            logging.error(f"GitHub connection failed: {str(e)}")
+            return False
+    
+    def upload_to_github(self, file_paths):
+        """Upload files to GitHub repository"""
+        try:
+            repo = self.config.get('github_repo', '')
+            token = self.config.get('github_token', '')
+            branch = self.config.get('github_branch', 'main')
+            
+            if not repo or not token:
+                logging.error("GitHub repository or token not configured")
+                return False
+            
+            headers = {
+                'Authorization': f'token {token}',
+                'Accept': 'application/vnd.github.v3+json'
+            }
+            
+            for file_path in file_paths:
+                if not os.path.exists(file_path):
+                    continue
+                    
+                # Read file content
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                
+                # Encode content to base64
+                content_encoded = base64.b64encode(content.encode('utf-8')).decode('utf-8')
+                
+                # Get just the filename for GitHub
+                filename = os.path.basename(file_path)
+                
+                # Check if file already exists to get SHA
+                check_url = f"https://api.github.com/repos/{repo}/contents/{filename}"
+                check_params = {'ref': branch}
+                check_response = self.session.get(check_url, headers=headers, params=check_params, timeout=30)
+                
+                # Prepare the commit data
+                commit_data = {
+                    'message': f'Update media tracker: {filename}',
+                    'content': content_encoded,
+                    'branch': branch
+                }
+                
+                # If file exists, include the SHA for update
+                if check_response.status_code == 200:
+                    existing_file = check_response.json()
+                    commit_data['sha'] = existing_file['sha']
+                
+                # Upload/update the file
+                upload_url = f"https://api.github.com/repos/{repo}/contents/{filename}"
+                response = self.session.put(upload_url, headers=headers, json=commit_data, timeout=30)
+                
+                if response.status_code in [200, 201]:
+                    logging.info(f"Successfully uploaded {filename} to GitHub")
+                else:
+                    logging.error(f"Failed to upload {filename} to GitHub: {response.status_code} - {response.text}")
+            
+            return True
+            
+        except Exception as e:
+            logging.error(f"Error uploading to GitHub: {str(e)}")
             return False
     
     def run_daily_sync(self):
