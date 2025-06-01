@@ -113,19 +113,18 @@ def plex_auth():
         client_identifier = str(uuid.uuid4())
         session['plex_client_id'] = client_identifier
         
-        # Request a PIN from Plex
-        pin_data = {
-            'strong': 'true',
+        # Use the same method as device pairing for 4-digit codes
+        headers = {
+            'Accept': 'application/json',
             'X-Plex-Product': 'Media Tracker',
             'X-Plex-Version': '1.0',
             'X-Plex-Client-Identifier': client_identifier,
-            'X-Plex-Model': 'Web',
-            'X-Plex-Platform': 'Web'
+            'X-Plex-Platform': 'Linux',
+            'X-Plex-Model': 'bundled'
         }
         
-        response = requests.post('https://plex.tv/api/v2/pins', headers={
-            'Accept': 'application/json'
-        }, data=pin_data)
+        # Request PIN without strong parameter to get shorter code
+        response = requests.post('https://plex.tv/api/v2/pins', headers=headers)
         
         if response.status_code == 201:
             pin_info = response.json()
