@@ -160,8 +160,10 @@ def plex_auth_check():
             'X-Plex-Client-Identifier': client_id
         })
         
+        logging.debug(f"PIN check response status: {response.status_code}")
         if response.status_code == 200:
             pin_data = response.json()
+            logging.debug(f"PIN check data: {pin_data}")
             if pin_data.get('authToken'):
                 # Get user's Plex servers
                 servers_response = requests.get('https://plex.tv/api/v2/resources', headers={
