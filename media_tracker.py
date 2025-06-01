@@ -124,16 +124,25 @@ class MediaTracker:
             response.raise_for_status()
             
             calendar_data = response.json()
+            logging.debug(f"Sonarr calendar response sample: {calendar_data[:1] if calendar_data else 'No data'}")
             
             for episode in calendar_data:
-                air_date = episode.get('airDate', '')
-                if air_date == today:
+                air_date = episode.get('airDate', episode.get('airDateUtc', ''))
+                if air_date and air_date.startswith(today):
+                    # Try multiple possible field names for series title
+                    series_title = (
+                        episode.get('series', {}).get('title') or
+                        episode.get('seriesTitle') or
+                        episode.get('series', {}).get('seriesTitle') or
+                        'Unknown Series'
+                    )
+                    
                     scheduled_shows.append({
-                        'series_title': episode.get('series', {}).get('title', 'Unknown Series'),
+                        'series_title': series_title,
                         'episode_title': episode.get('title', 'Unknown Episode'),
                         'season': episode.get('seasonNumber', 'Unknown'),
                         'episode': episode.get('episodeNumber', 'Unknown'),
-                        'air_date': air_date
+                        'air_date': air_date.split('T')[0] if 'T' in air_date else air_date
                     })
         
         except Exception as e:
