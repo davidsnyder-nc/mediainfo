@@ -63,25 +63,32 @@ class MediaTracker:
             root = ET.fromstring(response.content)
             
             today = datetime.now().date()
-            yesterday = today - timedelta(days=1)
+            # Look for content added in the last 7 days to catch more items
+            cutoff_date = today - timedelta(days=7)
             
             for library in root.findall('.//Directory'):
                 library_key = library.get('key')
                 library_type = library.get('type')
+                library_title = library.get('title', 'Unknown Library')
+                
+                logging.info(f"Checking library: {library_title} (type: {library_type})")
                 
                 if library_type in ['movie', 'show']:
                     # Get recently added items from this library
                     recent_url = urljoin(self.config['plex_url'], f'/library/sections/{library_key}/recentlyAdded')
-                    recent_response = self.session.get(recent_url, headers=headers)
+                    recent_response = self.session.get(recent_url, headers=headers, timeout=30)
                     recent_response.raise_for_status()
                     
                     recent_root = ET.fromstring(recent_response.content)
+                    all_items = recent_root.findall('.//Video')
+                    logging.info(f"Found {len(all_items)} total items in {library_title}")
                     
-                    for item in recent_root.findall('.//Video'):
+                    for item in all_items:
                         added_at = item.get('addedAt')
                         if added_at:
                             added_date = datetime.fromtimestamp(int(added_at)).date()
-                            if added_date >= yesterday:
+                            # Show content from last 7 days but label appropriately
+                            if added_date >= cutoff_date:
                                 title = item.get('title', 'Unknown Title')
                                 year = item.get('year', 'Unknown Year')
                                 
