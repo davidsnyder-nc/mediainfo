@@ -117,25 +117,32 @@ class MediaTracker:
             today = datetime.now().strftime('%Y-%m-%d')
             tomorrow = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
             
-            url = urljoin(self.config['sonarr_url'], f'/api/v3/calendar?start={today}&end={tomorrow}')
+            # First get all series to create a lookup table
+            series_url = urljoin(self.config['sonarr_url'], '/api/v3/series')
             headers = {'X-Api-Key': self.config['sonarr_api_key']}
             
-            response = self.session.get(url, headers=headers)
-            response.raise_for_status()
+            series_response = self.session.get(series_url, headers=headers)
+            series_response.raise_for_status()
+            all_series = series_response.json()
             
-            calendar_data = response.json()
+            # Create a lookup dictionary for series ID to title
+            series_lookup = {series['id']: series['title'] for series in all_series}
+            
+            # Now get the calendar data
+            calendar_url = urljoin(self.config['sonarr_url'], f'/api/v3/calendar?start={today}&end={tomorrow}')
+            
+            calendar_response = self.session.get(calendar_url, headers=headers)
+            calendar_response.raise_for_status()
+            
+            calendar_data = calendar_response.json()
             logging.debug(f"Sonarr calendar response sample: {calendar_data[:1] if calendar_data else 'No data'}")
             
             for episode in calendar_data:
                 air_date = episode.get('airDate', episode.get('airDateUtc', ''))
                 if air_date and air_date.startswith(today):
-                    # Try multiple possible field names for series title
-                    series_title = (
-                        episode.get('series', {}).get('title') or
-                        episode.get('seriesTitle') or
-                        episode.get('series', {}).get('seriesTitle') or
-                        'Unknown Series'
-                    )
+                    # Get series title from lookup table using seriesId
+                    series_id = episode.get('seriesId')
+                    series_title = series_lookup.get(series_id, 'Unknown Series')
                     
                     scheduled_shows.append({
                         'series_title': series_title,

@@ -1,0 +1,32 @@
+INFO:werkzeug: * Debugger PIN: 110-342-151
+INFO:werkzeug:192.168.1.150 - - [01/Jun/2025 18:55:20] "GET / HTTP/1.1" 200 -
+INFO:root:Starting daily sync...
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): 192.168.1.20:32400
+DEBUG:urllib3.connectionpool:http://192.168.1.20:32400 "GET /identity HTTP/1.1" 200 180
+INFO:root:Plex connection successful
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): 192.168.1.20:8989
+DEBUG:urllib3.connectionpool:http://192.168.1.20:8989 "GET /api/v3/system/status HTTP/1.1" 200 None
+INFO:root:Sonarr connection successful
+DEBUG:urllib3.connectionpool:http://192.168.1.20:32400 "GET /library/sections HTTP/1.1" 200 587
+INFO:root:Checking library: Movies (type: movie)
+DEBUG:urllib3.connectionpool:http://192.168.1.20:32400 "GET /library/sections/1/recentlyAdded HTTP/1.1" 200 46246
+INFO:root:Found 100 total items in Movies
+INFO:root:Checking library: Recorded TV (type: show)
+DEBUG:urllib3.connectionpool:http://192.168.1.20:32400 "GET /library/sections/5/recentlyAdded HTTP/1.1" 200 28661
+INFO:root:Found 100 total items in Recorded TV
+INFO:root:Checking library: TV Shows (type: show)
+DEBUG:urllib3.connectionpool:http://192.168.1.20:32400 "GET /library/sections/3/recentlyAdded HTTP/1.1" 200 33712
+INFO:root:Found 100 total items in TV Shows
+DEBUG:urllib3.connectionpool:http://192.168.1.20:8989 "GET /api/v3/calendar?start=2025-06-01&end=2025-06-02 HTTP/1.1" 200 None
+DEBUG:root:Sonarr calendar response sample: [{'seriesId': 20, 'tvdbId': 10987402, 'episodeFileId': 9810, 'seasonNumber': 1, 'episodeNumber': 10, 'title': 'The Beast in Me', 'airDate': '2025-06-01', 'airDateUtc': '2025-06-01T07:00:00Z', 'runtime': 55, 'finaleType': 'season', 'overview': "Power is up for grabs as two warring crime families clash in a battle that threatens to topple empires and ruin lives. In the crossfire stands Harry Da Souza, a street-smart 'fixer' who knows too well where loyalties lie when opposing forces collide.", 'hasFile': True, 'monitored': True, 'absoluteEpisodeNumber': 10, 'unverifiedSceneNumbering': False, 'id': 2698}]
+INFO:root:Files written successfully to ./output
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.github.com:443
+DEBUG:urllib3.connectionpool:https://api.github.com:443 "GET /repos/davidsnyder-nc/podcasts/contents/media_tracker.txt?ref=main HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:https://api.github.com:443 "PUT /repos/davidsnyder-nc/podcasts/contents/media_tracker.txt HTTP/1.1" 200 None
+INFO:root:Successfully uploaded media_tracker.txt to GitHub
+INFO:root:Daily sync completed successfully
+INFO:werkzeug:192.168.1.150 - - [01/Jun/2025 18:55:37] "GET /run_daily_sync HTTP/1.1" 302 -
+INFO:werkzeug:192.168.1.150 - - [01/Jun/2025 18:55:37] "GET / HTTP/1.1" 200 -
+INFO:root:Configuration saved successfully
+INFO:werkzeug:192.168.1.150 - - [01/Jun/2025 18:55:50] "POST /save_output_format HTTP/1.1" 302 -
+INFO:werkzeug:192.168.1.150 - - [01/Jun/2025 18:55:50] "GET / HTTP/1.1" 200 -
