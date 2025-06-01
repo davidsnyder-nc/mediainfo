@@ -52,7 +52,10 @@ def save_config():
         
         # Only update fields that have values or are explicitly set
         for key, value in config_data.items():
-            if value or key in ['github_enabled', 'include_movies', 'include_tv_shows', 'include_tv_calendar']:  # Always save boolean fields
+            # Always save boolean fields and text customization fields (even if empty)
+            text_fields = ['report_title', 'movies_section_title', 'tv_shows_section_title', 
+                          'tv_calendar_section_title', 'no_movies_text', 'no_tv_text', 'no_schedule_text']
+            if value or key in ['github_enabled', 'include_movies', 'include_tv_shows', 'include_tv_calendar'] + text_fields:
                 existing_config[key] = value
         
         # Validate GitHub fields only if GitHub is being enabled
