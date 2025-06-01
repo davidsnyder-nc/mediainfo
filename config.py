@@ -24,9 +24,7 @@ class ConfigManager:
                 'include_timestamps': True,
                 'include_descriptions': False,
                 'file_naming': 'date_suffix',
-                'custom_movie_filename': 'plex_movies.txt',
-                'custom_tv_filename': 'plex_tv_shows.txt',
-                'custom_schedule_filename': 'sonarr_schedule.txt'
+                'single_output_file': 'media_tracker.txt'
             }
         }
     

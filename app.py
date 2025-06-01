@@ -243,9 +243,7 @@ def save_output_format():
             'include_timestamps': request.form.get('include_timestamps') == 'on',
             'include_descriptions': request.form.get('include_descriptions') == 'on',
             'file_naming': request.form.get('file_naming', 'date_suffix').strip(),
-            'custom_movie_filename': request.form.get('custom_movie_filename', 'plex_movies.txt').strip(),
-            'custom_tv_filename': request.form.get('custom_tv_filename', 'plex_tv_shows.txt').strip(),
-            'custom_schedule_filename': request.form.get('custom_schedule_filename', 'sonarr_schedule.txt').strip()
+            'single_output_file': request.form.get('single_output_file', 'media_tracker.txt').strip()
         }
         
         config_manager.save_config(config)

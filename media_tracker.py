@@ -157,28 +157,26 @@ class MediaTracker:
             schedule_format = output_format.get('schedule_format', 'Series: {series_title}\nEpisode: S{season:02d}E{episode:02d} - {episode_title}\nAir Date: {air_date}\n{separator}')
             file_naming = output_format.get('file_naming', 'date_suffix')
             
-            # Determine file names based on naming preference
+            # Single output file
             if file_naming == 'custom':
-                movies_file = os.path.join(output_dir, output_format.get('custom_movie_filename', 'plex_movies.txt'))
-                tv_file = os.path.join(output_dir, output_format.get('custom_tv_filename', 'plex_tv_shows.txt'))
-                schedule_file = os.path.join(output_dir, output_format.get('custom_schedule_filename', 'sonarr_schedule.txt'))
+                output_file = os.path.join(output_dir, output_format.get('single_output_file', 'media_tracker.txt'))
             elif file_naming == 'date_prefix':
-                movies_file = os.path.join(output_dir, f'{today_str}_plex_movies.txt')
-                tv_file = os.path.join(output_dir, f'{today_str}_plex_tv_shows.txt')
-                schedule_file = os.path.join(output_dir, f'{today_str}_sonarr_schedule.txt')
+                output_file = os.path.join(output_dir, f'{today_str}_media_tracker.txt')
             else:  # date_suffix (default)
-                movies_file = os.path.join(output_dir, f'plex_movies_{today_str}.txt')
-                tv_file = os.path.join(output_dir, f'plex_tv_shows_{today_str}.txt')
-                schedule_file = os.path.join(output_dir, f'sonarr_schedule_{today_str}.txt')
+                output_file = os.path.join(output_dir, f'media_tracker_{today_str}.txt')
             
-            # Write movies file
-            with open(movies_file, 'w') as f:
-                header = f"Plex Movies Added - {today_str}"
+            # Write all data to single file
+            with open(output_file, 'w') as f:
+                # Header
+                header = f"Media Tracker Report - {today_str}"
                 if timestamp:
                     header += f" (Generated: {timestamp})"
                 f.write(header + "\n")
                 f.write("=" * len(header) + "\n\n")
                 
+                # Movies section
+                f.write("PLEX MOVIES ADDED\n")
+                f.write("=" * 20 + "\n")
                 if movies:
                     for movie in movies:
                         content = movie_format.format(
@@ -189,16 +187,11 @@ class MediaTracker:
                         )
                         f.write(content + "\n")
                 else:
-                    f.write("No movies added today.\n")
-            
-            # Write TV shows file
-            with open(tv_file, 'w') as f:
-                header = f"Plex TV Shows Added - {today_str}"
-                if timestamp:
-                    header += f" (Generated: {timestamp})"
-                f.write(header + "\n")
-                f.write("=" * len(header) + "\n\n")
+                    f.write("No movies added recently.\n\n")
                 
+                # TV Shows section
+                f.write("\nPLEX TV SHOWS ADDED\n")
+                f.write("=" * 22 + "\n")
                 if tv_shows:
                     for show in tv_shows:
                         content = tv_format.format(
@@ -209,16 +202,11 @@ class MediaTracker:
                         )
                         f.write(content + "\n")
                 else:
-                    f.write("No TV shows added today.\n")
-            
-            # Write scheduled shows file
-            with open(schedule_file, 'w') as f:
-                header = f"Sonarr TV Schedule - {today_str}"
-                if timestamp:
-                    header += f" (Generated: {timestamp})"
-                f.write(header + "\n")
-                f.write("=" * len(header) + "\n\n")
+                    f.write("No TV shows added recently.\n\n")
                 
+                # Schedule section
+                f.write("\nSONARR TV SCHEDULE\n")
+                f.write("=" * 19 + "\n")
                 if scheduled_shows:
                     for show in scheduled_shows:
                         content = schedule_format.format(
@@ -237,7 +225,7 @@ class MediaTracker:
             
             # Upload to GitHub if enabled
             if self.config.get('github_enabled', False):
-                self.upload_to_github([movies_file, tv_file, schedule_file])
+                self.upload_to_github([output_file])
             
             return True
             

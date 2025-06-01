@@ -232,28 +232,11 @@
                             </div>
                             
                             <div id="custom_filename_fields" style="display: {{ 'block' if config.output_format.file_naming == 'custom' if config.output_format else 'none' }};">
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <div class="mb-3">
-                                            <label for="custom_movie_filename" class="form-label">Movie Filename</label>
-                                            <input type="text" class="form-control" id="custom_movie_filename" name="custom_movie_filename" 
-                                                   value="{{ config.output_format.custom_movie_filename if config.output_format else 'plex_movies.txt' }}" placeholder="plex_movies.txt">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="mb-3">
-                                            <label for="custom_tv_filename" class="form-label">TV Shows Filename</label>
-                                            <input type="text" class="form-control" id="custom_tv_filename" name="custom_tv_filename" 
-                                                   value="{{ config.output_format.custom_tv_filename if config.output_format else 'plex_tv_shows.txt' }}" placeholder="plex_tv_shows.txt">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="mb-3">
-                                            <label for="custom_schedule_filename" class="form-label">Schedule Filename</label>
-                                            <input type="text" class="form-control" id="custom_schedule_filename" name="custom_schedule_filename" 
-                                                   value="{{ config.output_format.custom_schedule_filename if config.output_format else 'sonarr_schedule.txt' }}" placeholder="sonarr_schedule.txt">
-                                        </div>
-                                    </div>
+                                <div class="mb-3">
+                                    <label for="single_output_file" class="form-label">Output Filename</label>
+                                    <input type="text" class="form-control" id="single_output_file" name="single_output_file" 
+                                           value="{{ config.output_format.single_output_file if config.output_format else 'media_tracker.txt' }}" placeholder="media_tracker.txt">
+                                    <div class="form-text">All data (movies, TV shows, and schedule) will be written to this single file</div>
                                 </div>
                             </div>
                             
