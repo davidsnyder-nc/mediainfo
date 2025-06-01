@@ -184,7 +184,8 @@ class MediaTracker:
             # Write all data to single file
             with open(output_file, 'w') as f:
                 # Header
-                header = f"Media Tracker Report - {today_str}"
+                report_title = self.config.get('report_title', 'Media Tracker Report')
+                header = f"{report_title} - {today_str}"
                 if timestamp:
                     header += f" (Generated: {timestamp})"
                 f.write(header + "\n")
@@ -192,8 +193,9 @@ class MediaTracker:
                 
                 # Movies section
                 if self.config.get('include_movies', True):
-                    f.write("PLEX MOVIES ADDED\n")
-                    f.write("=" * 20 + "\n")
+                    movies_title = self.config.get('movies_section_title', 'PLEX MOVIES ADDED')
+                    f.write(f"{movies_title}\n")
+                    f.write("=" * len(movies_title) + "\n")
                     if movies:
                         for movie in movies:
                             content = movie_format.format(
@@ -204,12 +206,14 @@ class MediaTracker:
                             )
                             f.write(content + "\n")
                     else:
-                        f.write("No movies added recently.\n\n")
+                        no_movies_text = self.config.get('no_movies_text', 'No movies added recently.')
+                        f.write(f"{no_movies_text}\n\n")
                 
                 # TV Shows section
                 if self.config.get('include_tv_shows', True):
-                    f.write("\nPLEX TV SHOWS ADDED\n")
-                    f.write("=" * 22 + "\n")
+                    tv_shows_title = self.config.get('tv_shows_section_title', 'PLEX TV SHOWS ADDED')
+                    f.write(f"\n{tv_shows_title}\n")
+                    f.write("=" * len(tv_shows_title) + "\n")
                     if tv_shows:
                         for show in tv_shows:
                             content = tv_format.format(
@@ -220,12 +224,14 @@ class MediaTracker:
                             )
                             f.write(content + "\n")
                     else:
-                        f.write("No TV shows added recently.\n\n")
+                        no_tv_text = self.config.get('no_tv_text', 'No TV shows added recently.')
+                        f.write(f"{no_tv_text}\n\n")
                 
                 # Schedule section
                 if self.config.get('include_tv_calendar', True):
-                    f.write("\nSONARR TV SCHEDULE\n")
-                    f.write("=" * 19 + "\n")
+                    tv_calendar_title = self.config.get('tv_calendar_section_title', 'SONARR TV SCHEDULE')
+                    f.write(f"\n{tv_calendar_title}\n")
+                    f.write("=" * len(tv_calendar_title) + "\n")
                     if scheduled_shows:
                         for show in scheduled_shows:
                             content = schedule_format.format(
@@ -238,7 +244,8 @@ class MediaTracker:
                             )
                             f.write(content + "\n")
                     else:
-                        f.write("No shows scheduled for today.\n")
+                        no_schedule_text = self.config.get('no_schedule_text', 'No shows scheduled for today.')
+                        f.write(f"{no_schedule_text}\n")
             
             logging.info(f"Files written successfully to {output_dir}")
             

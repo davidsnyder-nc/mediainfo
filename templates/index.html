@@ -148,6 +148,56 @@
                                 </div>
                             </div>
 
+                            <!-- Text Customization Card -->
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0"><i class="fas fa-font me-2"></i>Text Customization</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="report_title" class="form-label">Report Title</label>
+                                                <input type="text" class="form-control" id="report_title" name="report_title" 
+                                                       value="{{ config.get('report_title', 'Media Tracker Report') }}" placeholder="Media Tracker Report">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="movies_section_title" class="form-label">Movies Section Title</label>
+                                                <input type="text" class="form-control" id="movies_section_title" name="movies_section_title" 
+                                                       value="{{ config.get('movies_section_title', 'PLEX MOVIES ADDED') }}" placeholder="PLEX MOVIES ADDED">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="tv_shows_section_title" class="form-label">TV Shows Section Title</label>
+                                                <input type="text" class="form-control" id="tv_shows_section_title" name="tv_shows_section_title" 
+                                                       value="{{ config.get('tv_shows_section_title', 'PLEX TV SHOWS ADDED') }}" placeholder="PLEX TV SHOWS ADDED">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="tv_calendar_section_title" class="form-label">TV Calendar Section Title</label>
+                                                <input type="text" class="form-control" id="tv_calendar_section_title" name="tv_calendar_section_title" 
+                                                       value="{{ config.get('tv_calendar_section_title', 'SONARR TV SCHEDULE') }}" placeholder="SONARR TV SCHEDULE">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="no_movies_text" class="form-label">No Movies Text</label>
+                                                <input type="text" class="form-control" id="no_movies_text" name="no_movies_text" 
+                                                       value="{{ config.get('no_movies_text', 'No movies added recently.') }}" placeholder="No movies added recently.">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="no_tv_text" class="form-label">No TV Shows Text</label>
+                                                <input type="text" class="form-control" id="no_tv_text" name="no_tv_text" 
+                                                       value="{{ config.get('no_tv_text', 'No TV shows added recently.') }}" placeholder="No TV shows added recently.">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="no_schedule_text" class="form-label">No Schedule Text</label>
+                                                <input type="text" class="form-control" id="no_schedule_text" name="no_schedule_text" 
+                                                       value="{{ config.get('no_schedule_text', 'No shows scheduled for today.') }}" placeholder="No shows scheduled for today.">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- GitHub Integration Card -->
                             <div class="card mb-4">
                                 <div class="card-header">
