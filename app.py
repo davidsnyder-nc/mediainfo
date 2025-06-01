@@ -219,8 +219,21 @@ def plex_auth_check():
                             
                             flash('Plex authentication successful!', 'success')
                             return redirect(url_for('index'))
-                
-                flash('Could not find accessible Plex server', 'error')
+                        else:
+                            # Save just the token for local use
+                            config = config_manager.get_config()
+                            config['plex_token'] = pin_data['authToken']
+                            config_manager.save_config(config)
+                            
+                            # Clear session data
+                            session.pop('plex_pin_id', None)
+                            session.pop('plex_pin_code', None)
+                            session.pop('plex_client_id', None)
+                            
+                            flash('Plex token saved! Please manually enter your Plex server URL in the configuration.', 'warning')
+                            return redirect(url_for('index'))
+                    else:
+                        flash('No owned Plex servers found', 'error')
             else:
                 flash('Authentication not yet complete. Please enter the code in Plex and try again.', 'warning')
         else:
