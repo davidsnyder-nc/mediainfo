@@ -287,6 +287,86 @@
                                     <i class="fas fa-save me-2"></i>Save All Configuration
                                 </button>
                             </div>
+                            
+                            <!-- Scheduler Configuration Section -->
+                            <div class="card mt-4 config-section scheduler-card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-clock me-2"></i>Automated Scheduling
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="form-check form-switch mb-3">
+                                                <input class="form-check-input" type="checkbox" id="scheduler_enabled" name="scheduler_enabled" {{ 'checked' if config.scheduler_enabled else '' }}>
+                                                <label class="form-check-label" for="scheduler_enabled">
+                                                    <strong>Enable Automatic Media Sync</strong>
+                                                </label>
+                                            </div>
+                                            <p class="text-muted">When enabled, the media sync will run automatically based on your schedule preferences (Eastern US timezone).</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="scheduler_config_fields" style="display: {{ 'block' if config.scheduler_enabled else 'none' }};">
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label for="schedule_type" class="form-label">Schedule Type</label>
+                                                <select class="form-select" id="schedule_type" name="schedule_type">
+                                                    <option value="daily" {{ 'selected' if config.schedule_type == 'daily' else '' }}>Daily at specific time</option>
+                                                    <option value="hourly" {{ 'selected' if config.schedule_type == 'hourly' else '' }}>Every X hours</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        
+                                        <div id="daily_schedule_fields" style="display: {{ 'block' if config.schedule_type == 'daily' or not config.schedule_type else 'none' }};">
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    <label for="scheduler_hour" class="form-label">Hour (24h Eastern)</label>
+                                                    <select class="form-select" id="scheduler_hour" name="scheduler_hour">
+                                                        {% for hour in range(24) %}
+                                                        <option value="{{ hour }}" {{ 'selected' if config.scheduler_hour == hour else '' }}>{{ '%02d'|format(hour) }}:00</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label for="scheduler_minute" class="form-label">Minute</label>
+                                                    <select class="form-select" id="scheduler_minute" name="scheduler_minute">
+                                                        {% for minute in range(60) %}
+                                                        <option value="{{ minute }}" {{ 'selected' if config.scheduler_minute == minute else '' }}>{{ '%02d'|format(minute) }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div id="hourly_schedule_fields" style="display: {{ 'block' if config.schedule_type == 'hourly' else 'none' }};">
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    <label for="interval_hours" class="form-label">Interval (hours)</label>
+                                                    <select class="form-select" id="interval_hours" name="interval_hours">
+                                                        {% for hours in [1, 2, 3, 4, 6, 8, 12] %}
+                                                        <option value="{{ hours }}" {{ 'selected' if config.interval_hours == hours else '' }}>Every {{ hours }} hour{{ 's' if hours > 1 else '' }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if config.scheduler_enabled %}
+                                    <div class="alert alert-info mt-3">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>Scheduler Active:</strong> 
+                                        {% if config.schedule_type == 'hourly' %}
+                                            Sync will run every {{ config.interval_hours|default(1) }} hour(s) at the top of the hour (Eastern timezone).
+                                        {% else %}
+                                            Daily sync will run at {{ config.scheduler_hour|default(19) }}:{{ '%02d'|format(config.scheduler_minute|default(55)) }} Eastern time.
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
                         </form>
 
                     </div>
@@ -443,7 +523,7 @@
                                     <div class="col-md-4">
                                         <label for="scheduler_minute" class="form-label">Minute</label>
                                         <select class="form-select" id="scheduler_minute" name="scheduler_minute">
-                                            {% for minute in [0, 15, 30, 45] %}
+                                            {% for minute in range(60) %}
                                             <option value="{{ minute }}" {{ 'selected' if config.scheduler_minute == minute else '' }}>{{ '%02d'|format(minute) }}</option>
                                             {% endfor %}
                                         </select>
