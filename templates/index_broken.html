@@ -512,8 +512,12 @@
                         </div>
 
                         <div class="config-group">
+                            <h5 class="mb-3">Base URL</h5>
+                            <p>All API endpoints are accessible at: <code id="baseUrl"></code></p>
+                        </div>
+
+                        <div class="config-group">
                             <h5 class="mb-3">Available Endpoints</h5>
-                            <p><strong>Base URL:</strong> <span id="baseUrl">Loading...</span></p>
                             
                             <div class="card mb-3">
                                 <div class="card-header">
@@ -521,7 +525,27 @@
                                 </div>
                                 <div class="card-body">
                                     <p><strong>Description:</strong> Get current status of all services</p>
-                                    <button class="btn btn-outline-primary btn-sm" onclick="testAPI('/api/status')">Test Endpoint</button>
+                                    <p><strong>Response:</strong></p>
+                                    <pre class="bg-light p-3 rounded"><code>{
+  "plex": {
+    "configured": true,
+    "connected": true
+  },
+  "sonarr": {
+    "configured": true,
+    "connected": false
+  },
+  "github": {
+    "configured": false,
+    "connected": false
+  },
+  "scheduler": {
+    "enabled": true,
+    "type": "daily",
+    "next_run": "2025-06-03T09:00:00"
+  }
+}</code></pre>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="testEndpoint('/api/status')">Test Endpoint</button>
                                 </div>
                             </div>
 
@@ -530,8 +554,19 @@
                                     <h6 class="mb-0"><span class="badge bg-success">GET</span> /api/config</h6>
                                 </div>
                                 <div class="card-body">
-                                    <p><strong>Description:</strong> Get current configuration settings</p>
-                                    <button class="btn btn-outline-primary btn-sm" onclick="testAPI('/api/config')">Test Endpoint</button>
+                                    <p><strong>Description:</strong> Get current configuration settings (excluding sensitive data)</p>
+                                    <p><strong>Response:</strong></p>
+                                    <pre class="bg-light p-3 rounded"><code>{
+  "plex_url": "http://192.168.1.100:32400",
+  "sonarr_url": "http://192.168.1.100:8989",
+  "filename": "daily_media_report.txt",
+  "timezone": "US/Eastern",
+  "movie_format": "{title} ({year}) - Added: {added_date}",
+  "tv_format": "{title} - Added: {added_date}",
+  "scheduler_enabled": true,
+  "schedule_type": "daily"
+}</code></pre>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="testEndpoint('/api/config')">Test Endpoint</button>
                                 </div>
                             </div>
 
@@ -540,8 +575,9 @@
                                     <h6 class="mb-0"><span class="badge bg-success">GET</span> /api/recent</h6>
                                 </div>
                                 <div class="card-body">
-                                    <p><strong>Description:</strong> Get recently added movies and TV shows</p>
-                                    <button class="btn btn-outline-primary btn-sm" onclick="testAPI('/api/recent')">Test Endpoint</button>
+                                    <p><strong>Description:</strong> Get movies and TV shows added today with detailed information</p>
+                                    <p><strong>Response includes:</strong> Title, year, rating, summary, duration, genres, directors, actors, poster URLs, content ratings</p>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="testEndpoint('/api/recent')">Test Endpoint</button>
                                 </div>
                             </div>
 
@@ -551,7 +587,8 @@
                                 </div>
                                 <div class="card-body">
                                     <p><strong>Description:</strong> Get today's TV schedule from Sonarr</p>
-                                    <button class="btn btn-outline-primary btn-sm" onclick="testAPI('/api/schedule')">Test Endpoint</button>
+                                    <p><strong>Response includes:</strong> Series title, episode title, season/episode numbers, air dates</p>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="testEndpoint('/api/schedule')">Test Endpoint</button>
                                 </div>
                             </div>
 
@@ -560,22 +597,37 @@
                                     <h6 class="mb-0"><span class="badge bg-success">GET</span> /api/full_sync</h6>
                                 </div>
                                 <div class="card-body">
-                                    <p><strong>Description:</strong> Get all data in one call</p>
-                                    <button class="btn btn-outline-primary btn-sm" onclick="testAPI('/api/full_sync')">Test Endpoint</button>
+                                    <p><strong>Description:</strong> Get all data in one call (recent content + schedule)</p>
+                                    <p><strong>Response:</strong></p>
+                                    <pre class="bg-light p-3 rounded"><code>{
+  "success": true,
+  "data": {
+    "movies": [...],
+    "tv_shows": [...],
+    "scheduled_shows": [...]
+  },
+  "timestamp": "2025-06-02T10:30:00-05:00",
+  "timezone": "US/Eastern"
+}</code></pre>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="testEndpoint('/api/full_sync')">Test Endpoint</button>
                                 </div>
                             </div>
                         </div>
 
                         <div class="config-group">
-                            <h5 class="mb-3">Sample Dashboard</h5>
+                            <h5 class="mb-3">Sample HTML Dashboard</h5>
+                            <p>Here's a simple example of how to use these APIs in an HTML page:</p>
                             <div class="d-grid gap-2">
                                 <a href="/dashboard" target="_blank" class="btn btn-success">
                                     <i class="bi bi-window me-2"></i>View Sample Dashboard
                                 </a>
+                                <button class="btn btn-outline-secondary" onclick="downloadSampleCode()">
+                                    <i class="bi bi-download me-2"></i>Download Sample HTML Code
+                                </button>
                             </div>
                         </div>
 
-                        <div id="apiResult" class="config-group" style="display: none;">
+                        <div id="apiTestResult" class="config-group" style="display: none;">
                             <h5 class="mb-3">Test Result</h5>
                             <div class="alert alert-info">
                                 <pre id="apiResponse"></pre>
@@ -584,7 +636,7 @@
                     </div>
                 </div>
 
-                <!-- Save Button -->
+                <!-- Save Button (Fixed at bottom) -->
                 <div class="bg-white p-3 border-top mt-4">
                     <div class="d-flex justify-content-between">
                         <div id="saveStatus"></div>
@@ -598,6 +650,36 @@
     </div>
 
     <script>
+        // Global functions for button clicks
+        function testEndpoint(endpoint) {
+            const resultDiv = document.getElementById('apiTestResult');
+            const responseDiv = document.getElementById('apiResponse');
+            
+            resultDiv.style.display = 'block';
+            responseDiv.textContent = 'Loading...';
+            
+            fetch(endpoint)
+                .then(response => response.json())
+                .then(data => {
+                    responseDiv.textContent = JSON.stringify(data, null, 2);
+                })
+                .catch(error => {
+                    responseDiv.textContent = 'Error: ' + error.message;
+                });
+        }
+
+        function downloadSampleCode() {
+            const htmlContent = '<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <title>Media Tracker Dashboard</title>\n    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">\n</head>\n<body>\n    <div class="container my-5">\n        <h1>Media Tracker Dashboard</h1>\n        <div id="content">Loading...</div>\n    </div>\n    <script>\n        fetch("' + window.location.origin + '/api/full_sync")\n            .then(response => response.json())\n            .then(data => {\n                document.getElementById("content").innerHTML = JSON.stringify(data, null, 2);\n            });\n    </script>\n</body>\n</html>';
+
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'media-tracker-dashboard.html';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
         function startPlexAuth() {
             window.open('/plex_auth', 'plexAuth', 'width=600,height=600');
         }
@@ -655,45 +737,53 @@
             }
         }
 
-        function testAPI(endpoint) {
-            const resultDiv = document.getElementById('apiResult');
-            const responseDiv = document.getElementById('apiResponse');
-            
-            resultDiv.style.display = 'block';
-            responseDiv.textContent = 'Loading...';
-            
-            fetch(endpoint)
-                .then(response => response.json())
-                .then(data => {
-                    responseDiv.textContent = JSON.stringify(data, null, 2);
-                })
-                .catch(error => {
-                    responseDiv.textContent = 'Error: ' + error.message;
-                });
-        }
-
+        // Initialize when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('baseUrl').textContent = window.location.origin;
+            // Update base URL dynamically
+            const baseUrlElement = document.getElementById('baseUrl');
+            if (baseUrlElement) {
+                baseUrlElement.textContent = window.location.origin;
+            }
 
-            document.getElementById('schedule_type').addEventListener('change', function() {
-                const scheduleType = this.value;
-                document.getElementById('dailySchedule').style.display = scheduleType === 'daily' ? 'block' : 'none';
-                document.getElementById('hourlySchedule').style.display = scheduleType === 'hourly' ? 'block' : 'none';
-            });
+            // Tab switching functionality
+            const scheduleType = document.getElementById('schedule_type');
+            if (scheduleType) {
+                scheduleType.addEventListener('change', function() {
+                    const type = this.value;
+                    const dailySchedule = document.getElementById('dailySchedule');
+                    const hourlySchedule = document.getElementById('hourlySchedule');
+                    if (dailySchedule) dailySchedule.style.display = type === 'daily' ? 'block' : 'none';
+                    if (hourlySchedule) hourlySchedule.style.display = type === 'hourly' ? 'block' : 'none';
+                });
+            }
 
-            document.getElementById('scheduler_enabled').addEventListener('change', function() {
-                document.getElementById('schedulerSettings').style.display = this.checked ? 'block' : 'none';
-            });
+            const schedulerEnabled = document.getElementById('scheduler_enabled');
+            if (schedulerEnabled) {
+                schedulerEnabled.addEventListener('change', function() {
+                    const settings = document.getElementById('schedulerSettings');
+                    if (settings) settings.style.display = this.checked ? 'block' : 'none';
+                });
+            }
 
-            document.getElementById('github_enabled').addEventListener('change', function() {
-                document.getElementById('githubSettings').style.display = this.checked ? 'block' : 'none';
-            });
+            const githubEnabled = document.getElementById('github_enabled');
+            if (githubEnabled) {
+                githubEnabled.addEventListener('change', function() {
+                    const settings = document.getElementById('githubSettings');
+                    if (settings) settings.style.display = this.checked ? 'block' : 'none';
+                });
+            }
 
-            document.getElementById('configForm').addEventListener('submit', function(e) {
-                const btn = this.querySelector('button[type="submit"]');
-                btn.disabled = true;
-                btn.innerHTML = '<i class="bi bi-arrow-repeat me-2 spinner-border spinner-border-sm"></i>Saving...';
-            });
+            // Form submission
+            const configForm = document.getElementById('configForm');
+            if (configForm) {
+                configForm.addEventListener('submit', function(e) {
+                    const btn = this.querySelector('button[type="submit"]');
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = '<i class="bi bi-arrow-repeat me-2 spinner-border spinner-border-sm"></i>Saving...';
+                    }
+                });
+            }
         });
     </script>
 </body>
