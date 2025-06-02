@@ -28,8 +28,10 @@ class ConfigManager:
             'github_token': '',
             'github_branch': 'main',
             'scheduler_enabled': False,
+            'schedule_type': 'daily',
             'scheduler_hour': 19,
             'scheduler_minute': 55,
+            'interval_hours': 1,
             'output_format': {
                 'movie_format': 'Title: {title}\nYear: {year}\nAdded: {added_date}\n{separator}',
                 'tv_format': 'Title: {title}\nYear: {year}\nAdded: {added_date}\n{separator}',

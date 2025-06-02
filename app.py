@@ -7,7 +7,9 @@ from config import ConfigManager
 from media_tracker import MediaTracker
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
+from apscheduler.triggers.interval import IntervalTrigger
 import atexit
+import pytz
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -54,25 +56,43 @@ def update_scheduler():
     """Update scheduler based on current configuration"""
     config = config_manager.get_config()
     
+    # Set Eastern timezone
+    eastern = pytz.timezone('US/Eastern')
+    
     # Remove existing job if it exists
     try:
-        scheduler.remove_job('daily_sync')
+        scheduler.remove_job('media_sync')
     except:
         pass
     
     # Add new job if scheduling is enabled
     if config.get('scheduler_enabled', False):
-        hour = config.get('scheduler_hour', 19)
-        minute = config.get('scheduler_minute', 55)
+        schedule_type = config.get('schedule_type', 'daily')
         
-        scheduler.add_job(
-            func=scheduled_sync,
-            trigger=CronTrigger(hour=hour, minute=minute),
-            id='daily_sync',
-            name='Daily Media Sync',
-            replace_existing=True
-        )
-        logging.info(f"Scheduled daily sync for {hour:02d}:{minute:02d}")
+        if schedule_type == 'daily':
+            hour = config.get('scheduler_hour', 19)
+            minute = config.get('scheduler_minute', 55)
+            
+            scheduler.add_job(
+                func=scheduled_sync,
+                trigger=CronTrigger(hour=hour, minute=minute, timezone=eastern),
+                id='media_sync',
+                name='Daily Media Sync',
+                replace_existing=True
+            )
+            logging.info(f"Scheduled daily sync for {hour:02d}:{minute:02d} Eastern")
+            
+        elif schedule_type == 'hourly':
+            interval_hours = config.get('interval_hours', 1)
+            
+            scheduler.add_job(
+                func=scheduled_sync,
+                trigger=IntervalTrigger(hours=interval_hours, timezone=eastern),
+                id='media_sync',
+                name=f'Hourly Media Sync (every {interval_hours}h)',
+                replace_existing=True
+            )
+            logging.info(f"Scheduled sync every {interval_hours} hour(s) Eastern")
 
 @app.route('/')
 def index():
@@ -105,8 +125,10 @@ def save_config():
             'github_token': request.form.get('github_token', '').strip(),
             'github_branch': request.form.get('github_branch', 'main').strip(),
             'scheduler_enabled': request.form.get('scheduler_enabled') == 'on',
+            'schedule_type': request.form.get('schedule_type', 'daily'),
             'scheduler_hour': int(request.form.get('scheduler_hour', 19)),
-            'scheduler_minute': int(request.form.get('scheduler_minute', 55))
+            'scheduler_minute': int(request.form.get('scheduler_minute', 55)),
+            'interval_hours': int(request.form.get('interval_hours', 1))
         }
         
         # Load existing config and merge with new data (allows partial updates)

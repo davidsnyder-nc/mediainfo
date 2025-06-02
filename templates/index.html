@@ -408,30 +408,56 @@
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <div class="form-check form-switch mb-3">
                                     <input class="form-check-input" type="checkbox" id="scheduler_enabled" name="scheduler_enabled" {{ 'checked' if config.scheduler_enabled else '' }}>
                                     <label class="form-check-label" for="scheduler_enabled">
-                                        <strong>Enable Automatic Daily Sync</strong>
+                                        <strong>Enable Automatic Media Sync</strong>
                                     </label>
                                 </div>
-                                <p class="text-muted">When enabled, the media sync will run automatically every day at your specified time.</p>
+                                <p class="text-muted">When enabled, the media sync will run automatically based on your schedule preferences (Eastern US timezone).</p>
                             </div>
-                            <div class="col-md-6" id="scheduler_time_fields" style="display: {{ 'block' if config.scheduler_enabled else 'none' }};">
+                        </div>
+                        
+                        <div id="scheduler_config_fields" style="display: {{ 'block' if config.scheduler_enabled else 'none' }};">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="schedule_type" class="form-label">Schedule Type</label>
+                                    <select class="form-select" id="schedule_type" name="schedule_type">
+                                        <option value="daily" {{ 'selected' if config.schedule_type == 'daily' else '' }}>Daily at specific time</option>
+                                        <option value="hourly" {{ 'selected' if config.schedule_type == 'hourly' else '' }}>Every X hours</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div id="daily_schedule_fields" style="display: {{ 'block' if config.schedule_type == 'daily' or not config.schedule_type else 'none' }};">
                                 <div class="row">
-                                    <div class="col-6">
-                                        <label for="scheduler_hour" class="form-label">Hour (24h)</label>
+                                    <div class="col-md-4">
+                                        <label for="scheduler_hour" class="form-label">Hour (24h Eastern)</label>
                                         <select class="form-select" id="scheduler_hour" name="scheduler_hour">
                                             {% for hour in range(24) %}
                                             <option value="{{ hour }}" {{ 'selected' if config.scheduler_hour == hour else '' }}>{{ '%02d'|format(hour) }}:00</option>
                                             {% endfor %}
                                         </select>
                                     </div>
-                                    <div class="col-6">
+                                    <div class="col-md-4">
                                         <label for="scheduler_minute" class="form-label">Minute</label>
                                         <select class="form-select" id="scheduler_minute" name="scheduler_minute">
                                             {% for minute in [0, 15, 30, 45] %}
                                             <option value="{{ minute }}" {{ 'selected' if config.scheduler_minute == minute else '' }}>{{ '%02d'|format(minute) }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="hourly_schedule_fields" style="display: {{ 'block' if config.schedule_type == 'hourly' else 'none' }};">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <label for="interval_hours" class="form-label">Interval (hours)</label>
+                                        <select class="form-select" id="interval_hours" name="interval_hours">
+                                            {% for hours in [1, 2, 3, 4, 6, 8, 12] %}
+                                            <option value="{{ hours }}" {{ 'selected' if config.interval_hours == hours else '' }}>Every {{ hours }} hour{{ 's' if hours > 1 else '' }}</option>
                                             {% endfor %}
                                         </select>
                                     </div>
@@ -442,7 +468,12 @@
                         {% if config.scheduler_enabled %}
                         <div class="alert alert-info mt-3">
                             <i class="fas fa-info-circle me-2"></i>
-                            <strong>Scheduler Active:</strong> Daily sync will run at {{ config.scheduler_hour|default(19) }}:{{ '%02d'|format(config.scheduler_minute|default(55)) }} every day.
+                            <strong>Scheduler Active:</strong> 
+                            {% if config.schedule_type == 'hourly' %}
+                                Sync will run every {{ config.interval_hours|default(1) }} hour(s) (Eastern timezone).
+                            {% else %}
+                                Daily sync will run at {{ config.scheduler_hour|default(19) }}:{{ '%02d'|format(config.scheduler_minute|default(55)) }} Eastern time.
+                            {% endif %}
                         </div>
                         {% endif %}
                     </div>
@@ -465,10 +496,24 @@
             customFields.style.display = this.value === 'custom' ? 'block' : 'none';
         });
         
-        // Toggle scheduler time fields visibility
+        // Toggle scheduler configuration fields visibility
         document.getElementById('scheduler_enabled').addEventListener('change', function() {
-            const timeFields = document.getElementById('scheduler_time_fields');
-            timeFields.style.display = this.checked ? 'block' : 'none';
+            const configFields = document.getElementById('scheduler_config_fields');
+            configFields.style.display = this.checked ? 'block' : 'none';
+        });
+        
+        // Toggle between daily and hourly schedule fields
+        document.getElementById('schedule_type').addEventListener('change', function() {
+            const dailyFields = document.getElementById('daily_schedule_fields');
+            const hourlyFields = document.getElementById('hourly_schedule_fields');
+            
+            if (this.value === 'daily') {
+                dailyFields.style.display = 'block';
+                hourlyFields.style.display = 'none';
+            } else if (this.value === 'hourly') {
+                dailyFields.style.display = 'none';
+                hourlyFields.style.display = 'block';
+            }
         });
     </script>
 </body>
