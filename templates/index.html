@@ -650,22 +650,36 @@
     </div>
 
     <script>
-        // Tab switching functionality
-        document.getElementById('schedule_type').addEventListener('change', function() {
-            const scheduleType = this.value;
-            document.getElementById('dailySchedule').style.display = scheduleType === 'daily' ? 'block' : 'none';
-            document.getElementById('hourlySchedule').style.display = scheduleType === 'hourly' ? 'block' : 'none';
-        });
+        // Global functions for button clicks
+        function testEndpoint(endpoint) {
+            const resultDiv = document.getElementById('apiTestResult');
+            const responseDiv = document.getElementById('apiResponse');
+            
+            resultDiv.style.display = 'block';
+            responseDiv.textContent = 'Loading...';
+            
+            fetch(endpoint)
+                .then(response => response.json())
+                .then(data => {
+                    responseDiv.textContent = JSON.stringify(data, null, 2);
+                })
+                .catch(error => {
+                    responseDiv.textContent = 'Error: ' + error.message;
+                });
+        }
 
-        document.getElementById('scheduler_enabled').addEventListener('change', function() {
-            document.getElementById('schedulerSettings').style.display = this.checked ? 'block' : 'none';
-        });
+        function downloadSampleCode() {
+            const htmlContent = '<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <title>Media Tracker Dashboard</title>\n    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">\n</head>\n<body>\n    <div class="container my-5">\n        <h1>Media Tracker Dashboard</h1>\n        <div id="content">Loading...</div>\n    </div>\n    <script>\n        fetch("' + window.location.origin + '/api/full_sync")\n            .then(response => response.json())\n            .then(data => {\n                document.getElementById("content").innerHTML = JSON.stringify(data, null, 2);\n            });\n    </script>\n</body>\n</html>';
 
-        document.getElementById('github_enabled').addEventListener('change', function() {
-            document.getElementById('githubSettings').style.display = this.checked ? 'block' : 'none';
-        });
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'media-tracker-dashboard.html';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
 
-        // API functions
         function startPlexAuth() {
             window.open('/plex_auth', 'plexAuth', 'width=600,height=600');
         }
@@ -686,7 +700,7 @@
                     if (data.github) message += 'GitHub: ✓';
                     else message += 'GitHub: ✗';
                     
-                    document.getElementById('saveStatus').innerHTML = `<div class="alert alert-info">${message}</div>`;
+                    document.getElementById('saveStatus').innerHTML = '<div class="alert alert-info">' + message + '</div>';
                 })
                 .finally(() => {
                     btn.disabled = false;
@@ -703,7 +717,7 @@
                 .then(response => response.json())
                 .then(data => {
                     const alertType = data.success ? 'alert-success' : 'alert-danger';
-                    document.getElementById('saveStatus').innerHTML = `<div class="alert ${alertType}">${data.message}</div>`;
+                    document.getElementById('saveStatus').innerHTML = '<div class="alert ' + alertType + '">' + data.message + '</div>';
                 })
                 .finally(() => {
                     btn.disabled = false;
@@ -723,70 +737,53 @@
             }
         }
 
-        // Form submission
-        document.getElementById('configForm').addEventListener('submit', function(e) {
-            const btn = this.querySelector('button[type="submit"]');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="bi bi-arrow-repeat me-2 spinner-border spinner-border-sm"></i>Saving...';
-        });
-
-        // API testing functions
-        window.testEndpoint = function(endpoint) {
-            const resultDiv = document.getElementById('apiTestResult');
-            const responseDiv = document.getElementById('apiResponse');
-            
-            resultDiv.style.display = 'block';
-            responseDiv.textContent = 'Loading...';
-            
-            fetch(endpoint)
-                .then(response => response.json())
-                .then(data => {
-                    responseDiv.textContent = JSON.stringify(data, null, 2);
-                })
-                .catch(error => {
-                    responseDiv.textContent = 'Error: ' + error.message;
-                });
-        }
-
-        window.downloadSampleCode = function() {
-            // Create sample HTML file for download
-            const htmlContent = [
-                '<!DOCTYPE html>',
-                '<html lang="en">',
-                '<head>',
-                '    <meta charset="UTF-8">',
-                '    <meta name="viewport" content="width=device-width, initial-scale=1.0">',
-                '    <title>Media Tracker Dashboard</title>',
-                '    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">',
-                '</head>',
-                '<body>',
-                '    <div class="container my-5">',
-                '        <h1>Media Tracker Dashboard</h1>',
-                '        <div id="content">Loading...</div>',
-                '    </div>',
-                '    <script>',
-                '        fetch("' + window.location.origin + '/api/full_sync")',
-                '            .then(response => response.json())',
-                '            .then(data => {',
-                '                document.getElementById("content").innerHTML = JSON.stringify(data, null, 2);',
-                '            });',
-                '    </script>',
-                '</body>',
-                '</html>'
-            ].join('\n');
-
-            const blob = new Blob([htmlContent], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'media-tracker-dashboard.html';
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        // Update base URL dynamically
+        // Initialize when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('baseUrl').textContent = window.location.origin;
+            // Update base URL dynamically
+            const baseUrlElement = document.getElementById('baseUrl');
+            if (baseUrlElement) {
+                baseUrlElement.textContent = window.location.origin;
+            }
+
+            // Tab switching functionality
+            const scheduleType = document.getElementById('schedule_type');
+            if (scheduleType) {
+                scheduleType.addEventListener('change', function() {
+                    const type = this.value;
+                    const dailySchedule = document.getElementById('dailySchedule');
+                    const hourlySchedule = document.getElementById('hourlySchedule');
+                    if (dailySchedule) dailySchedule.style.display = type === 'daily' ? 'block' : 'none';
+                    if (hourlySchedule) hourlySchedule.style.display = type === 'hourly' ? 'block' : 'none';
+                });
+            }
+
+            const schedulerEnabled = document.getElementById('scheduler_enabled');
+            if (schedulerEnabled) {
+                schedulerEnabled.addEventListener('change', function() {
+                    const settings = document.getElementById('schedulerSettings');
+                    if (settings) settings.style.display = this.checked ? 'block' : 'none';
+                });
+            }
+
+            const githubEnabled = document.getElementById('github_enabled');
+            if (githubEnabled) {
+                githubEnabled.addEventListener('change', function() {
+                    const settings = document.getElementById('githubSettings');
+                    if (settings) settings.style.display = this.checked ? 'block' : 'none';
+                });
+            }
+
+            // Form submission
+            const configForm = document.getElementById('configForm');
+            if (configForm) {
+                configForm.addEventListener('submit', function(e) {
+                    const btn = this.querySelector('button[type="submit"]');
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = '<i class="bi bi-arrow-repeat me-2 spinner-border spinner-border-sm"></i>Saving...';
+                    }
+                });
+            }
         });
     </script>
 </body>
