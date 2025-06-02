@@ -498,6 +498,11 @@ def api_config():
     
     return jsonify(safe_config)
 
+@app.route('/dashboard')
+def dashboard():
+    """Sample dashboard that demonstrates API usage"""
+    return render_template('dashboard.html')
+
 # Initialize scheduler now that all functions are defined
 init_scheduler()
 

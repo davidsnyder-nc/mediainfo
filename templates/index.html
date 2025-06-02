@@ -166,6 +166,11 @@
                             <i class="bi bi-play-circle me-2"></i>Actions
                         </button>
                     </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="api-tab" data-bs-toggle="tab" data-bs-target="#api" type="button" role="tab">
+                            <i class="bi bi-code-square me-2"></i>API
+                        </button>
+                    </li>
                 </ul>
 
                 <!-- Tab Content -->
@@ -491,6 +496,144 @@
                             </button>
                         </div>
                     </div>
+
+                    <!-- API Documentation Tab -->
+                    <div class="tab-pane fade" id="api" role="tabpanel">
+                        <div class="section-header">
+                            <div class="d-flex align-items-center">
+                                <div class="icon-badge">
+                                    <i class="bi bi-code-square"></i>
+                                </div>
+                                <div>
+                                    <h4 class="mb-1">JSON API Documentation</h4>
+                                    <p class="text-muted mb-0">Connect external applications to retrieve media data</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="config-group">
+                            <h5 class="mb-3">Base URL</h5>
+                            <p>All API endpoints are accessible at: <code id="baseUrl">http://localhost:5000</code></p>
+                        </div>
+
+                        <div class="config-group">
+                            <h5 class="mb-3">Available Endpoints</h5>
+                            
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><span class="badge bg-success">GET</span> /api/status</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>Description:</strong> Get current status of all services</p>
+                                    <p><strong>Response:</strong></p>
+                                    <pre class="bg-light p-3 rounded"><code>{
+  "plex": {
+    "configured": true,
+    "connected": true
+  },
+  "sonarr": {
+    "configured": true,
+    "connected": false
+  },
+  "github": {
+    "configured": false,
+    "connected": false
+  },
+  "scheduler": {
+    "enabled": true,
+    "type": "daily",
+    "next_run": "2025-06-03T09:00:00"
+  }
+}</code></pre>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="testEndpoint('/api/status')">Test Endpoint</button>
+                                </div>
+                            </div>
+
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><span class="badge bg-success">GET</span> /api/config</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>Description:</strong> Get current configuration settings (excluding sensitive data)</p>
+                                    <p><strong>Response:</strong></p>
+                                    <pre class="bg-light p-3 rounded"><code>{
+  "plex_url": "http://192.168.1.100:32400",
+  "sonarr_url": "http://192.168.1.100:8989",
+  "filename": "daily_media_report.txt",
+  "timezone": "US/Eastern",
+  "movie_format": "{title} ({year}) - Added: {added_date}",
+  "tv_format": "{title} - Added: {added_date}",
+  "scheduler_enabled": true,
+  "schedule_type": "daily"
+}</code></pre>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="testEndpoint('/api/config')">Test Endpoint</button>
+                                </div>
+                            </div>
+
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><span class="badge bg-success">GET</span> /api/recent</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>Description:</strong> Get movies and TV shows added today with detailed information</p>
+                                    <p><strong>Response includes:</strong> Title, year, rating, summary, duration, genres, directors, actors, poster URLs, content ratings</p>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="testEndpoint('/api/recent')">Test Endpoint</button>
+                                </div>
+                            </div>
+
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><span class="badge bg-success">GET</span> /api/schedule</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>Description:</strong> Get today's TV schedule from Sonarr</p>
+                                    <p><strong>Response includes:</strong> Series title, episode title, season/episode numbers, air dates</p>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="testEndpoint('/api/schedule')">Test Endpoint</button>
+                                </div>
+                            </div>
+
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><span class="badge bg-success">GET</span> /api/full_sync</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>Description:</strong> Get all data in one call (recent content + schedule)</p>
+                                    <p><strong>Response:</strong></p>
+                                    <pre class="bg-light p-3 rounded"><code>{
+  "success": true,
+  "data": {
+    "movies": [...],
+    "tv_shows": [...],
+    "scheduled_shows": [...]
+  },
+  "timestamp": "2025-06-02T10:30:00-05:00",
+  "timezone": "US/Eastern"
+}</code></pre>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="testEndpoint('/api/full_sync')">Test Endpoint</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="config-group">
+                            <h5 class="mb-3">Sample HTML Dashboard</h5>
+                            <p>Here's a simple example of how to use these APIs in an HTML page:</p>
+                            <div class="d-grid gap-2">
+                                <a href="/dashboard" target="_blank" class="btn btn-success">
+                                    <i class="bi bi-window me-2"></i>View Sample Dashboard
+                                </a>
+                                <button class="btn btn-outline-secondary" onclick="downloadSampleCode()">
+                                    <i class="bi bi-download me-2"></i>Download Sample HTML Code
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="apiTestResult" class="config-group" style="display: none;">
+                            <h5 class="mb-3">Test Result</h5>
+                            <div class="alert alert-info">
+                                <pre id="apiResponse"></pre>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Save Button (Fixed at bottom) -->
@@ -586,6 +729,223 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="bi bi-arrow-repeat me-2 spinner-border spinner-border-sm"></i>Saving...';
         });
+
+        // API testing functions
+        function testEndpoint(endpoint) {
+            const resultDiv = document.getElementById('apiTestResult');
+            const responseDiv = document.getElementById('apiResponse');
+            
+            resultDiv.style.display = 'block';
+            responseDiv.textContent = 'Loading...';
+            
+            fetch(endpoint)
+                .then(response => response.json())
+                .then(data => {
+                    responseDiv.textContent = JSON.stringify(data, null, 2);
+                })
+                .catch(error => {
+                    responseDiv.textContent = 'Error: ' + error.message;
+                });
+        }
+
+        function downloadSampleCode() {
+            const sampleCode = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Tracker Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .poster-img { width: 100px; height: 150px; object-fit: cover; }
+        .status-indicator { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+        .status-connected { background-color: #198754; }
+        .status-disconnected { background-color: #dc3545; }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container my-5">
+        <h1 class="text-center mb-4">Media Tracker Dashboard</h1>
+        
+        <!-- Status Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">System Status</h5>
+                    </div>
+                    <div class="card-body" id="statusSection">
+                        Loading status...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Movies -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Recently Added Movies</h5>
+                    </div>
+                    <div class="card-body" id="moviesSection">
+                        Loading movies...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent TV Shows -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Recently Added TV Shows</h5>
+                    </div>
+                    <div class="card-body" id="tvShowsSection">
+                        Loading TV shows...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Schedule -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Today's TV Schedule</h5>
+                    </div>
+                    <div class="card-body" id="scheduleSection">
+                        Loading schedule...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000';
+
+        // Load status
+        fetch(API_BASE + '/api/status')
+            .then(response => response.json())
+            .then(data => {
+                const statusHtml = \`
+                    <div class="row">
+                        <div class="col-md-3">
+                            <span class="status-indicator status-\${data.plex.connected ? 'connected' : 'disconnected'}"></span>
+                            Plex: \${data.plex.connected ? 'Connected' : 'Disconnected'}
+                        </div>
+                        <div class="col-md-3">
+                            <span class="status-indicator status-\${data.sonarr.connected ? 'connected' : 'disconnected'}"></span>
+                            Sonarr: \${data.sonarr.connected ? 'Connected' : 'Disconnected'}
+                        </div>
+                        <div class="col-md-3">
+                            <span class="status-indicator status-\${data.github.connected ? 'connected' : 'disconnected'}"></span>
+                            GitHub: \${data.github.connected ? 'Connected' : 'Disconnected'}
+                        </div>
+                        <div class="col-md-3">
+                            Scheduler: \${data.scheduler.enabled ? 'Enabled' : 'Disabled'}
+                        </div>
+                    </div>
+                \`;
+                document.getElementById('statusSection').innerHTML = statusHtml;
+            });
+
+        // Load recent content
+        fetch(API_BASE + '/api/full_sync')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Display movies
+                    if (data.data.movies.length > 0) {
+                        const moviesHtml = data.data.movies.map(movie => \`
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title">\${movie.title} (\${movie.year})</h6>
+                                        <p class="card-text text-muted small">\${movie.summary.substring(0, 100)}...</p>
+                                        <div class="small">
+                                            <strong>Added:</strong> \${movie.added_date}<br>
+                                            <strong>Duration:</strong> \${movie.duration_formatted}<br>
+                                            <strong>Rating:</strong> \${movie.rating || 'N/A'}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        \`).join('');
+                        document.getElementById('moviesSection').innerHTML = '<div class="row">' + moviesHtml + '</div>';
+                    } else {
+                        document.getElementById('moviesSection').innerHTML = '<p class="text-muted">No movies added today.</p>';
+                    }
+
+                    // Display TV shows
+                    if (data.data.tv_shows.length > 0) {
+                        const tvHtml = data.data.tv_shows.map(show => \`
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title">\${show.title}</h6>
+                                        <p class="card-text text-muted small">\${show.summary.substring(0, 100)}...</p>
+                                        <div class="small">
+                                            <strong>Added:</strong> \${show.added_date}<br>
+                                            <strong>Seasons:</strong> \${show.season_count}<br>
+                                            <strong>Episodes:</strong> \${show.episode_count}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        \`).join('');
+                        document.getElementById('tvShowsSection').innerHTML = '<div class="row">' + tvHtml + '</div>';
+                    } else {
+                        document.getElementById('tvShowsSection').innerHTML = '<p class="text-muted">No TV shows added today.</p>';
+                    }
+
+                    // Display schedule
+                    if (data.data.scheduled_shows.length > 0) {
+                        const scheduleHtml = data.data.scheduled_shows.map(show => \`
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6 class="card-title">\${show.series_title}</h6>
+                                        <p class="mb-1">S\${show.season}E\${show.episode}: \${show.episode_title}</p>
+                                        <small class="text-muted">Airs: \${show.air_date}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        \`).join('');
+                        document.getElementById('scheduleSection').innerHTML = '<div class="row">' + scheduleHtml + '</div>';
+                    } else {
+                        document.getElementById('scheduleSection').innerHTML = '<p class="text-muted">No shows scheduled for today.</p>';
+                    }
+                }
+            })
+            .catch(error => {
+                document.getElementById('moviesSection').innerHTML = '<p class="text-danger">Error loading data</p>';
+                document.getElementById('tvShowsSection').innerHTML = '<p class="text-danger">Error loading data</p>';
+                document.getElementById('scheduleSection').innerHTML = '<p class="text-danger">Error loading data</p>';
+            });
+
+        // Auto-refresh every 5 minutes
+        setInterval(() => {
+            location.reload();
+        }, 5 * 60 * 1000);
+    </script>
+</body>
+</html>`;
+
+            const blob = new Blob([sampleCode], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'media-tracker-dashboard.html';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Update base URL dynamically
+        document.getElementById('baseUrl').textContent = window.location.origin;
     </script>
 </body>
 </html>
