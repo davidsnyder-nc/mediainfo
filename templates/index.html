@@ -739,6 +739,10 @@
                 });
         }
 
+        function downloadAPIDocumentation() {
+            window.location.href = '/api/documentation/download';
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const baseUrlElement = document.getElementById('baseUrl');
             if (baseUrlElement) {
