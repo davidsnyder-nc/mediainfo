@@ -731,7 +731,7 @@
         });
 
         // API testing functions
-        function testEndpoint(endpoint) {
+        window.testEndpoint = function(endpoint) {
             const resultDiv = document.getElementById('apiTestResult');
             const responseDiv = document.getElementById('apiResponse');
             
@@ -748,194 +748,34 @@
                 });
         }
 
-        function downloadSampleCode() {
-            const sampleCode = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Media Tracker Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .poster-img { width: 100px; height: 150px; object-fit: cover; }
-        .status-indicator { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 8px; }
-        .status-connected { background-color: #198754; }
-        .status-disconnected { background-color: #dc3545; }
-    </style>
-</head>
-<body class="bg-light">
-    <div class="container my-5">
-        <h1 class="text-center mb-4">Media Tracker Dashboard</h1>
-        
-        <!-- Status Section -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">System Status</h5>
-                    </div>
-                    <div class="card-body" id="statusSection">
-                        Loading status...
-                    </div>
-                </div>
-            </div>
-        </div>
+        window.downloadSampleCode = function() {
+            // Create sample HTML file for download
+            const htmlContent = [
+                '<!DOCTYPE html>',
+                '<html lang="en">',
+                '<head>',
+                '    <meta charset="UTF-8">',
+                '    <meta name="viewport" content="width=device-width, initial-scale=1.0">',
+                '    <title>Media Tracker Dashboard</title>',
+                '    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">',
+                '</head>',
+                '<body>',
+                '    <div class="container my-5">',
+                '        <h1>Media Tracker Dashboard</h1>',
+                '        <div id="content">Loading...</div>',
+                '    </div>',
+                '    <script>',
+                '        fetch("http://localhost:5000/api/full_sync")',
+                '            .then(response => response.json())',
+                '            .then(data => {',
+                '                document.getElementById("content").innerHTML = JSON.stringify(data, null, 2);',
+                '            });',
+                '    </script>',
+                '</body>',
+                '</html>'
+            ].join('\\n');
 
-        <!-- Recent Movies -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Recently Added Movies</h5>
-                    </div>
-                    <div class="card-body" id="moviesSection">
-                        Loading movies...
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Recent TV Shows -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Recently Added TV Shows</h5>
-                    </div>
-                    <div class="card-body" id="tvShowsSection">
-                        Loading TV shows...
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Today's Schedule -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Today's TV Schedule</h5>
-                    </div>
-                    <div class="card-body" id="scheduleSection">
-                        Loading schedule...
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const API_BASE = 'http://localhost:5000';
-
-        // Load status
-        fetch(API_BASE + '/api/status')
-            .then(response => response.json())
-            .then(data => {
-                const statusHtml = \`
-                    <div class="row">
-                        <div class="col-md-3">
-                            <span class="status-indicator status-\${data.plex.connected ? 'connected' : 'disconnected'}"></span>
-                            Plex: \${data.plex.connected ? 'Connected' : 'Disconnected'}
-                        </div>
-                        <div class="col-md-3">
-                            <span class="status-indicator status-\${data.sonarr.connected ? 'connected' : 'disconnected'}"></span>
-                            Sonarr: \${data.sonarr.connected ? 'Connected' : 'Disconnected'}
-                        </div>
-                        <div class="col-md-3">
-                            <span class="status-indicator status-\${data.github.connected ? 'connected' : 'disconnected'}"></span>
-                            GitHub: \${data.github.connected ? 'Connected' : 'Disconnected'}
-                        </div>
-                        <div class="col-md-3">
-                            Scheduler: \${data.scheduler.enabled ? 'Enabled' : 'Disabled'}
-                        </div>
-                    </div>
-                \`;
-                document.getElementById('statusSection').innerHTML = statusHtml;
-            });
-
-        // Load recent content
-        fetch(API_BASE + '/api/full_sync')
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Display movies
-                    if (data.data.movies.length > 0) {
-                        const moviesHtml = data.data.movies.map(movie => \`
-                            <div class="col-md-4 mb-3">
-                                <div class="card h-100">
-                                    <div class="card-body">
-                                        <h6 class="card-title">\${movie.title} (\${movie.year})</h6>
-                                        <p class="card-text text-muted small">\${movie.summary.substring(0, 100)}...</p>
-                                        <div class="small">
-                                            <strong>Added:</strong> \${movie.added_date}<br>
-                                            <strong>Duration:</strong> \${movie.duration_formatted}<br>
-                                            <strong>Rating:</strong> \${movie.rating || 'N/A'}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        \`).join('');
-                        document.getElementById('moviesSection').innerHTML = '<div class="row">' + moviesHtml + '</div>';
-                    } else {
-                        document.getElementById('moviesSection').innerHTML = '<p class="text-muted">No movies added today.</p>';
-                    }
-
-                    // Display TV shows
-                    if (data.data.tv_shows.length > 0) {
-                        const tvHtml = data.data.tv_shows.map(show => \`
-                            <div class="col-md-4 mb-3">
-                                <div class="card h-100">
-                                    <div class="card-body">
-                                        <h6 class="card-title">\${show.title}</h6>
-                                        <p class="card-text text-muted small">\${show.summary.substring(0, 100)}...</p>
-                                        <div class="small">
-                                            <strong>Added:</strong> \${show.added_date}<br>
-                                            <strong>Seasons:</strong> \${show.season_count}<br>
-                                            <strong>Episodes:</strong> \${show.episode_count}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        \`).join('');
-                        document.getElementById('tvShowsSection').innerHTML = '<div class="row">' + tvHtml + '</div>';
-                    } else {
-                        document.getElementById('tvShowsSection').innerHTML = '<p class="text-muted">No TV shows added today.</p>';
-                    }
-
-                    // Display schedule
-                    if (data.data.scheduled_shows.length > 0) {
-                        const scheduleHtml = data.data.scheduled_shows.map(show => \`
-                            <div class="col-md-6 mb-3">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h6 class="card-title">\${show.series_title}</h6>
-                                        <p class="mb-1">S\${show.season}E\${show.episode}: \${show.episode_title}</p>
-                                        <small class="text-muted">Airs: \${show.air_date}</small>
-                                    </div>
-                                </div>
-                            </div>
-                        \`).join('');
-                        document.getElementById('scheduleSection').innerHTML = '<div class="row">' + scheduleHtml + '</div>';
-                    } else {
-                        document.getElementById('scheduleSection').innerHTML = '<p class="text-muted">No shows scheduled for today.</p>';
-                    }
-                }
-            })
-            .catch(error => {
-                document.getElementById('moviesSection').innerHTML = '<p class="text-danger">Error loading data</p>';
-                document.getElementById('tvShowsSection').innerHTML = '<p class="text-danger">Error loading data</p>';
-                document.getElementById('scheduleSection').innerHTML = '<p class="text-danger">Error loading data</p>';
-            });
-
-        // Auto-refresh every 5 minutes
-        setInterval(() => {
-            location.reload();
-        }, 5 * 60 * 1000);
-    </script>
-</body>
-</html>`;
-
-            const blob = new Blob([sampleCode], { type: 'text/html' });
+            const blob = new Blob([htmlContent], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
