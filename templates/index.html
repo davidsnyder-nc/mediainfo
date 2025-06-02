@@ -513,7 +513,7 @@
 
                         <div class="config-group">
                             <h5 class="mb-3">Base URL</h5>
-                            <p>All API endpoints are accessible at: <code id="baseUrl">http://localhost:5000</code></p>
+                            <p>All API endpoints are accessible at: <code id="baseUrl"></code></p>
                         </div>
 
                         <div class="config-group">
@@ -765,7 +765,7 @@
                 '        <div id="content">Loading...</div>',
                 '    </div>',
                 '    <script>',
-                '        fetch("http://localhost:5000/api/full_sync")',
+                '        fetch("' + window.location.origin + '/api/full_sync")',
                 '            .then(response => response.json())',
                 '            .then(data => {',
                 '                document.getElementById("content").innerHTML = JSON.stringify(data, null, 2);',
@@ -773,7 +773,7 @@
                 '    </script>',
                 '</body>',
                 '</html>'
-            ].join('\\n');
+            ].join('\n');
 
             const blob = new Blob([htmlContent], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
@@ -785,7 +785,9 @@
         }
 
         // Update base URL dynamically
-        document.getElementById('baseUrl').textContent = window.location.origin;
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('baseUrl').textContent = window.location.origin;
+        });
     </script>
 </body>
 </html>
