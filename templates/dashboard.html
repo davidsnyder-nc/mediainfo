@@ -444,29 +444,66 @@
         function refreshDashboard() {
             console.log('Refreshing dashboard with new settings...');
             
-            // Visual feedback
+            // Save settings to localStorage
+            saveDashboardSettings();
+            
+            // Visual feedback - store original text properly
             const btn = document.querySelector('button[onclick="refreshDashboard()"]');
-            let originalText = '';
+            if (btn && !btn.hasAttribute('data-original-text')) {
+                btn.setAttribute('data-original-text', btn.innerHTML);
+            }
+            
             if (btn) {
-                originalText = btn.innerHTML;
-                btn.innerHTML = '<i class="bi bi-arrow-clockwise me-1 spin"></i>Refreshing...';
+                btn.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i>Refreshing...';
                 btn.disabled = true;
             }
             
             // Update sections immediately
             updateSectionVisibility();
             
-            // Simple timeout to restore button
+            // Always restore button after 1 second regardless of API status
             setTimeout(() => {
                 if (btn) {
+                    const originalText = btn.getAttribute('data-original-text');
                     btn.innerHTML = originalText;
                     btn.disabled = false;
                 }
-                loadStatus();
-                loadRecentContent();
-                loadLibraryStats();
-                setupAutoRefresh();
             }, 1000);
+            
+            // Load data separately without affecting button
+            loadStatus();
+            loadRecentContent();
+            loadLibraryStats();
+            setupAutoRefresh();
+        }
+        
+        function saveDashboardSettings() {
+            const settings = {
+                daysRange: document.getElementById('daysRange').value,
+                showStatus: document.getElementById('showStatus').checked,
+                showMovies: document.getElementById('showMovies').checked,
+                showTVShows: document.getElementById('showTVShows').checked,
+                showSchedule: document.getElementById('showSchedule').checked,
+                showLibraryStats: document.getElementById('showLibraryStats').checked,
+                showExtendedInfo: document.getElementById('showExtendedInfo').checked,
+                autoRefresh: document.getElementById('autoRefresh').checked
+            };
+            localStorage.setItem('dashboardSettings', JSON.stringify(settings));
+        }
+        
+        function loadDashboardSettings() {
+            const saved = localStorage.getItem('dashboardSettings');
+            if (saved) {
+                const settings = JSON.parse(saved);
+                document.getElementById('daysRange').value = settings.daysRange || '7';
+                document.getElementById('showStatus').checked = settings.showStatus !== false;
+                document.getElementById('showMovies').checked = settings.showMovies !== false;
+                document.getElementById('showTVShows').checked = settings.showTVShows !== false;
+                document.getElementById('showSchedule').checked = settings.showSchedule !== false;
+                document.getElementById('showLibraryStats').checked = settings.showLibraryStats || false;
+                document.getElementById('showExtendedInfo').checked = settings.showExtendedInfo || false;
+                document.getElementById('autoRefresh').checked = settings.autoRefresh || false;
+            }
         }
         
         function loadRecentContent() {
@@ -666,6 +703,9 @@
 
         // Add event listeners for settings changes
         document.addEventListener('DOMContentLoaded', function() {
+            // Load saved settings first
+            loadDashboardSettings();
+            
             // Add click handler for the refresh button
             const refreshBtn = document.querySelector('button[onclick="refreshDashboard()"]');
             if (refreshBtn) {
@@ -675,22 +715,36 @@
                 });
             }
 
-            document.getElementById('daysRange').addEventListener('change', refreshDashboard);
+            // Auto-save settings when changed
+            document.getElementById('daysRange').addEventListener('change', function() {
+                saveDashboardSettings();
+                updateSectionVisibility();
+            });
             
-            ['showStatus', 'showMovies', 'showTVShows', 'showSchedule', 'showLibraryStats'].forEach(id => {
+            ['showStatus', 'showMovies', 'showTVShows', 'showSchedule', 'showLibraryStats', 'showExtendedInfo'].forEach(id => {
                 const element = document.getElementById(id);
                 if (element) {
-                    element.addEventListener('change', updateSectionVisibility);
+                    element.addEventListener('change', function() {
+                        saveDashboardSettings();
+                        updateSectionVisibility();
+                    });
                 }
             });
             
             const autoRefreshElement = document.getElementById('autoRefresh');
             if (autoRefreshElement) {
-                autoRefreshElement.addEventListener('change', setupAutoRefresh);
+                autoRefreshElement.addEventListener('change', function() {
+                    saveDashboardSettings();
+                    setupAutoRefresh();
+                });
             }
 
-            // Initial load
-            refreshDashboard();
+            // Initial load with saved settings
+            updateSectionVisibility();
+            loadStatus();
+            loadRecentContent();
+            loadLibraryStats();
+            setupAutoRefresh();
         });
     </script>
 
