@@ -1,102 +1,155 @@
 # Media Tracker
 
-A Flask-based media tracking application that integrates with Plex and Sonarr APIs to generate customizable daily content reports with automated scheduling capabilities.
+**Media Tracker** is a Flask-based application that unifies your home media APIs (Plex, Sonarr, and more) into a single, modern API and dashboard.  
+It acts as a "one API to rule them all," aggregating, normalizing, and exposing your media data through a single endpoint and a beautiful web interface.
+
+---
+
+## Why Media Tracker?
+
+- **One API, One Dashboard:**  
+  No more juggling multiple apps and endpoints. Media Tracker collects, merges, and presents all your media data in one place.
+- **Meta-API:**  
+  Query your entire media ecosystem (Plex, Sonarr, etc.) through a single, consistent API.
+- **Customizable Reports:**  
+  Generate daily/weekly reports, text files, and more—locally or to GitHub.
+- **Modern Dashboard:**  
+  See your entire media universe at a glance: movies, TV shows, schedules, stats, and more.
+
+---
 
 ## Features
 
-- **Plex Integration**: Track movies and TV shows added to your Plex server
-- **Sonarr Integration**: Monitor TV show schedules and upcoming episodes
-- **Automated Scheduling**: Built-in APScheduler with Eastern timezone support
-- **Flexible Scheduling**: Choose between daily or hourly sync options
-- **Custom Output**: Configurable text file generation with custom formatting
-- **GitHub Integration**: Optional automatic upload of reports to GitHub repository
-- **Web Interface**: Easy-to-use configuration interface
-- **OAuth Support**: Secure Plex authentication using OAuth flow
+### 🛠 Unified API Layer
+- Aggregates data from Plex, Sonarr, and other media APIs.
+- Exposes a single `/internal/all_content` endpoint for all movies, TV shows, and schedules.
+- Normalizes metadata (titles, artwork, genres, ratings, etc.) across sources.
+- Extensible: add more media sources as plugins.
+
+### 📊 Modern Dashboard
+- Recently added movies and TV shows (with artwork, metadata, and filters).
+- TV schedule (from Sonarr and other sources).
+- System status (Plex, Sonarr, GitHub, Scheduler).
+- Library statistics (movies, shows, episodes, libraries).
+- Auto-refresh, display customization, and more.
+
+### 📝 Customizable Reports
+- Generate daily/weekly text reports of new content and schedules.
+- Customizable output format for each section.
+- Save reports locally or upload to GitHub.
+
+### 🔄 Automated Scheduling
+- Built-in APScheduler for daily or hourly syncs (Eastern timezone support).
+- Manual sync available from the web interface.
+
+### ☁️ GitHub Integration (Optional)
+- Automatically upload generated reports to a GitHub repository.
+- Supports personal access tokens and branch selection.
+
+### ⚙️ Configuration Web UI
+- Easy-to-use web interface for all settings:
+  - API details for each service (Plex, Sonarr, etc.)
+  - GitHub integration
+  - Scheduler options
+  - Output formatting
+  - Dashboard display options
+
+### 🔒 Security
+- Sensitive configuration (API keys, tokens) stored locally and excluded from git.
+- OAuth support for secure Plex authentication.
+- Environment variable support for secrets.
+
+---
 
 ## Installation
 
-1. Clone this repository:
-```bash
-git clone https://github.com/davidsnyder-nc/mediainfo.git
-cd mediainfo
-```
+1. **Clone the repository:**
+   ```sh
+   git clone https://github.com/davidsnyder-nc/mediainfo.git
+   cd mediainfo
+   ```
+2. **Create a virtual environment:**
+   ```sh
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+3. **Install dependencies:**
+   ```sh
+   pip install flask apscheduler requests pytz
+   ```
 
-2. Create a virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-3. Install dependencies:
-```bash
-pip install flask apscheduler requests pytz
-```
-
-## Configuration
-
-1. Run the application:
-```bash
-python app.py
-```
-
-2. Open your browser to `http://localhost:3038`
-
-3. Configure your API settings:
-   - **Plex**: Use the OAuth authentication or manually enter your Plex URL and token
-   - **Sonarr**: Enter your Sonarr URL and API key
-   - **GitHub** (optional): Configure repository upload settings
-   - **Scheduler**: Enable automated daily or hourly syncing
+---
 
 ## Usage
 
-### Manual Sync
-Click "Run Daily Sync" to manually trigger content collection from your configured APIs.
+1. **Run the application:**
+   ```sh
+   python app.py
+   ```
+2. **Open your browser to:**  
+   [http://localhost:3038](http://localhost:3038)
+3. **Configure your settings:**  
+   - Enter API details for Plex, Sonarr, and any other supported services.
+   - Optionally configure GitHub and scheduler.
+4. **Dashboard:**  
+   - View your unified media library, schedule, and stats in real time.
+5. **Unified API:**  
+   - Query `/internal/all_content` for a normalized JSON of all your movies, TV shows, and schedules.
+6. **Manual & Automated Sync:**  
+   - Click "Run Daily Sync" or enable the scheduler for automatic updates.
 
-### Automated Scheduling
-Enable the scheduler in the configuration to automatically run syncs:
-- **Daily**: Run at a specific time each day (Eastern timezone)
-- **Hourly**: Run every X hours at the top of the hour
+---
 
-### Output Customization
-Customize the output format for movies, TV shows, and schedules using template variables:
-- `{title}`, `{year}`, `{added_date}` for movies/shows
-- `{series_title}`, `{episode_title}`, `{season}`, `{episode}`, `{air_date}` for schedules
+## API Endpoints
 
-## API Requirements
+- `/internal/all_content`  
+  Returns a normalized JSON object with all movies, TV shows, and schedules from all connected services.
+- `/internal/schedule`  
+  Returns upcoming TV schedules (from Sonarr and others).
+- `/internal/library_stats`  
+  Returns statistics for all libraries.
+- `/internal/status`  
+  Returns system and API connection status.
 
-### Plex
-- Plex Media Server with network access
-- Valid Plex account for OAuth authentication
+*See the code or API docs for more endpoints and details.*
 
-### Sonarr
-- Sonarr instance with API access enabled
-- API key from Sonarr settings
+---
 
-### GitHub (Optional)
-- GitHub repository for report uploads
-- Personal access token with 'repo' permissions
+## Output & Reports
 
-## File Structure
+- Reports are saved in the `output/` directory (excluded from git).
+- Customizable format for movies, TV shows, and schedule.
+- Optionally upload reports to GitHub.
 
-- `app.py` - Main Flask application with scheduler
-- `config.py` - Configuration management
-- `media_tracker.py` - API integration logic
-- `templates/` - Web interface templates
-- `output/` - Generated report files (excluded from git)
+---
 
-## Security
+## Security & Best Practices
 
-- All sensitive configuration is stored locally in `config.json` (excluded from git)
-- OAuth flow for secure Plex authentication
-- Environment variable support for secrets
+- **Never commit your `config.json` or API keys to git.**
+- `.gitignore` is pre-configured to exclude sensitive files.
+- Use environment variables for secrets if deploying to production.
+
+---
 
 ## Troubleshooting
 
-- Ensure your Plex server is accessible from the application
-- Verify Sonarr API key has proper permissions
-- Check that GitHub token has 'repo' scope if using repository uploads
-- Review application logs for detailed error messages
+- Ensure all media servers are accessible from the app server.
+- Verify API keys and tokens are correct.
+- Check logs for detailed error messages.
+- For GitHub uploads, ensure your token has `repo` scope.
+
+---
 
 ## License
 
-This project is open source and available under the MIT License.
+MIT License
+
+---
+
+## About
+
+Media Tracker is an open-source project by [davidsnyder-nc](https://github.com/davidsnyder-nc/mediainfo) for home media enthusiasts who want a single API and dashboard for their entire media universe.
+
+---
+
+**Want to add more integrations or features? Fork the project or open an issue!**
