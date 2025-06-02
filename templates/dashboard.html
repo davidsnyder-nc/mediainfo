@@ -453,84 +453,25 @@
                 btn.disabled = true;
             }
             
-            // Function to restore button state
-            const restoreButton = () => {
+            // Update sections immediately
+            updateSectionVisibility();
+            
+            // Simple timeout to restore button
+            setTimeout(() => {
                 if (btn) {
                     btn.innerHTML = originalText;
                     btn.disabled = false;
                 }
-            };
-            
-            // Update sections immediately
-            updateSectionVisibility();
-            
-            // Load data with error handling
-            Promise.allSettled([
-                loadStatusPromise(),
-                loadRecentContentPromise(),
-                loadLibraryStatsPromise()
-            ]).finally(() => {
+                loadStatus();
+                loadRecentContent();
+                loadLibraryStats();
                 setupAutoRefresh();
-                restoreButton();
-            });
+            }, 1000);
         }
         
-        function loadStatusPromise() {
-            return fetch('/api/status')
-                .then(response => response.json())
-                .then(data => {
-                    const statusHtml = `
-                        <div class="row">
-                            <div class="col-md-3 mb-3">
-                                <div class="d-flex align-items-center p-3 bg-light rounded">
-                                    <span class="status-indicator status-${data.plex.connected ? 'connected' : 'disconnected'}"></span>
-                                    <div>
-                                        <div class="fw-bold">Plex</div>
-                                        <small class="text-muted">${data.plex.connected ? 'Connected' : 'Disconnected'}</small>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3 mb-3">
-                                <div class="d-flex align-items-center p-3 bg-light rounded">
-                                    <span class="status-indicator status-${data.sonarr.connected ? 'connected' : 'disconnected'}"></span>
-                                    <div>
-                                        <div class="fw-bold">Sonarr</div>
-                                        <small class="text-muted">${data.sonarr.connected ? 'Connected' : 'Disconnected'}</small>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3 mb-3">
-                                <div class="d-flex align-items-center p-3 bg-light rounded">
-                                    <span class="status-indicator status-${data.github.connected ? 'connected' : 'disconnected'}"></span>
-                                    <div>
-                                        <div class="fw-bold">GitHub</div>
-                                        <small class="text-muted">${data.github.connected ? 'Connected' : 'Disconnected'}</small>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3 mb-3">
-                                <div class="d-flex align-items-center p-3 bg-light rounded">
-                                    <i class="bi bi-clock me-2 text-primary"></i>
-                                    <div>
-                                        <div class="fw-bold">Scheduler</div>
-                                        <small class="text-muted">${data.scheduler.enabled ? 'Enabled' : 'Disabled'}</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    document.getElementById('statusSection').innerHTML = statusHtml;
-                    document.getElementById('statusLastUpdated').textContent = `Updated: ${formatTimestamp()}`;
-                })
-                .catch(error => {
-                    document.getElementById('statusSection').innerHTML = '<div class="alert alert-danger">Error loading status information</div>';
-                    document.getElementById('statusLastUpdated').textContent = `Error: ${formatTimestamp()}`;
-                });
-        }
-        
-        function loadRecentContentPromise() {
+        function loadRecentContent() {
             const days = getDaysRange();
-            return fetch(`/api/full_sync?days=${days}`)
+            fetch(`/api/full_sync?days=${days}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -550,11 +491,6 @@
                                                     <strong>Rating:</strong> ${movie.rating || 'N/A'}
                                                 </div>
                                             </div>
-                                            ${movie.genres && movie.genres.length > 0 ? `
-                                                <div class="mt-2">
-                                                    ${movie.genres.slice(0, 3).map(genre => `<span class="badge bg-secondary me-1">${genre}</span>`).join('')}
-                                                </div>
-                                            ` : ''}
                                         </div>
                                     </div>
                                 </div>
@@ -580,11 +516,6 @@
                                                     <strong>Episodes:</strong> ${show.episode_count || 'Unknown'}
                                                 </div>
                                             </div>
-                                            ${show.genres && show.genres.length > 0 ? `
-                                                <div class="mt-2">
-                                                    ${show.genres.slice(0, 3).map(genre => `<span class="badge bg-secondary me-1">${genre}</span>`).join('')}
-                                                </div>
-                                            ` : ''}
                                         </div>
                                     </div>
                                 </div>
@@ -628,67 +559,15 @@
                         document.getElementById('scheduleLastUpdated').textContent = `Updated: ${formatTimestamp()}`;
                     } else {
                         // Handle API errors gracefully
-                        document.getElementById('moviesSection').innerHTML = '<div class="alert alert-warning">Unable to load movie data. Please check your Plex configuration.</div>';
-                        document.getElementById('tvShowsSection').innerHTML = '<div class="alert alert-warning">Unable to load TV show data. Please check your Plex configuration.</div>';
-                        document.getElementById('scheduleSection').innerHTML = '<div class="alert alert-warning">Unable to load schedule data. Please check your Sonarr configuration.</div>';
+                        document.getElementById('moviesSection').innerHTML = '<div class="alert alert-warning">Configure your Plex server in Services tab to see movie data</div>';
+                        document.getElementById('tvShowsSection').innerHTML = '<div class="alert alert-warning">Configure your Plex server in Services tab to see TV show data</div>';
+                        document.getElementById('scheduleSection').innerHTML = '<div class="alert alert-warning">Configure your Sonarr server in Services tab to see schedule data</div>';
                     }
                 })
                 .catch(error => {
-                    document.getElementById('moviesSection').innerHTML = '<div class="alert alert-danger">Error loading content data</div>';
-                    document.getElementById('tvShowsSection').innerHTML = '<div class="alert alert-danger">Error loading content data</div>';
-                    document.getElementById('scheduleSection').innerHTML = '<div class="alert alert-danger">Error loading schedule data</div>';
-                });
-        }
-        
-        function loadLibraryStatsPromise() {
-            if (!document.getElementById('showLibraryStats').checked) return Promise.resolve();
-            
-            return fetch('/api/library_stats')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.library_stats) {
-                        const stats = data.library_stats;
-                        const statsHtml = `
-                            <div class="row">
-                                <div class="col-md-3 mb-3">
-                                    <div class="card bg-primary text-white h-100">
-                                        <div class="card-body text-center">
-                                            <h3 class="card-title">${stats.total_movies}</h3>
-                                            <p class="card-text">Total Movies</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 mb-3">
-                                    <div class="card bg-success text-white h-100">
-                                        <div class="card-body text-center">
-                                            <h3 class="card-title">${stats.total_shows}</h3>
-                                            <p class="card-text">Total TV Shows</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <div class="card h-100">
-                                        <div class="card-body">
-                                            <h6 class="card-title">Libraries</h6>
-                                            ${stats.libraries.map(lib => `
-                                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                                    <span><i class="bi bi-folder me-2"></i>${lib.title}</span>
-                                                    <span class="badge bg-secondary">${lib.count} items</span>
-                                                </div>
-                                            `).join('')}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                        document.getElementById('libraryStatsSection').innerHTML = statsHtml;
-                        document.getElementById('libraryStatsLastUpdated').textContent = `Updated: ${formatTimestamp()}`;
-                    } else {
-                        document.getElementById('libraryStatsSection').innerHTML = '<div class="alert alert-warning">Unable to load library statistics. Please check your Plex configuration.</div>';
-                    }
-                })
-                .catch(error => {
-                    document.getElementById('libraryStatsSection').innerHTML = '<div class="alert alert-warning">Unable to load library statistics. Please check your Plex configuration.</div>';
+                    document.getElementById('moviesSection').innerHTML = '<div class="alert alert-warning">Configure your services to see media data</div>';
+                    document.getElementById('tvShowsSection').innerHTML = '<div class="alert alert-warning">Configure your services to see media data</div>';
+                    document.getElementById('scheduleSection').innerHTML = '<div class="alert alert-warning">Configure your services to see media data</div>';
                 });
         }
 
