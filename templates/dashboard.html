@@ -443,24 +443,253 @@
 
         function refreshDashboard() {
             console.log('Refreshing dashboard with new settings...');
-            updateSectionVisibility();
-            loadStatus();
-            loadRecentContent();
-            loadLibraryStats();
-            setupAutoRefresh();
             
             // Visual feedback
             const btn = document.querySelector('button[onclick="refreshDashboard()"]');
+            let originalText = '';
             if (btn) {
-                const originalText = btn.innerHTML;
+                originalText = btn.innerHTML;
                 btn.innerHTML = '<i class="bi bi-arrow-clockwise me-1 spin"></i>Refreshing...';
                 btn.disabled = true;
-                
-                setTimeout(() => {
+            }
+            
+            // Function to restore button state
+            const restoreButton = () => {
+                if (btn) {
                     btn.innerHTML = originalText;
                     btn.disabled = false;
-                }, 2000);
-            }
+                }
+            };
+            
+            // Update sections immediately
+            updateSectionVisibility();
+            
+            // Load data with error handling
+            Promise.allSettled([
+                loadStatusPromise(),
+                loadRecentContentPromise(),
+                loadLibraryStatsPromise()
+            ]).finally(() => {
+                setupAutoRefresh();
+                restoreButton();
+            });
+        }
+        
+        function loadStatusPromise() {
+            return fetch('/api/status')
+                .then(response => response.json())
+                .then(data => {
+                    const statusHtml = `
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <div class="d-flex align-items-center p-3 bg-light rounded">
+                                    <span class="status-indicator status-${data.plex.connected ? 'connected' : 'disconnected'}"></span>
+                                    <div>
+                                        <div class="fw-bold">Plex</div>
+                                        <small class="text-muted">${data.plex.connected ? 'Connected' : 'Disconnected'}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="d-flex align-items-center p-3 bg-light rounded">
+                                    <span class="status-indicator status-${data.sonarr.connected ? 'connected' : 'disconnected'}"></span>
+                                    <div>
+                                        <div class="fw-bold">Sonarr</div>
+                                        <small class="text-muted">${data.sonarr.connected ? 'Connected' : 'Disconnected'}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="d-flex align-items-center p-3 bg-light rounded">
+                                    <span class="status-indicator status-${data.github.connected ? 'connected' : 'disconnected'}"></span>
+                                    <div>
+                                        <div class="fw-bold">GitHub</div>
+                                        <small class="text-muted">${data.github.connected ? 'Connected' : 'Disconnected'}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="d-flex align-items-center p-3 bg-light rounded">
+                                    <i class="bi bi-clock me-2 text-primary"></i>
+                                    <div>
+                                        <div class="fw-bold">Scheduler</div>
+                                        <small class="text-muted">${data.scheduler.enabled ? 'Enabled' : 'Disabled'}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('statusSection').innerHTML = statusHtml;
+                    document.getElementById('statusLastUpdated').textContent = `Updated: ${formatTimestamp()}`;
+                })
+                .catch(error => {
+                    document.getElementById('statusSection').innerHTML = '<div class="alert alert-danger">Error loading status information</div>';
+                    document.getElementById('statusLastUpdated').textContent = `Error: ${formatTimestamp()}`;
+                });
+        }
+        
+        function loadRecentContentPromise() {
+            const days = getDaysRange();
+            return fetch(`/api/full_sync?days=${days}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Display movies
+                        if (data.data.movies && data.data.movies.length > 0) {
+                            const moviesHtml = data.data.movies.map(movie => `
+                                <div class="col-lg-4 col-md-6 mb-3">
+                                    <div class="card media-card h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-title fw-bold">${movie.title} <span class="text-muted">(${movie.year})</span></h6>
+                                            <p class="card-text text-muted small">${movie.summary ? movie.summary.substring(0, 120) + '...' : 'No summary available'}</p>
+                                            <div class="row small">
+                                                <div class="col-6">
+                                                    <strong>Added:</strong> ${movie.added_date}
+                                                </div>
+                                                <div class="col-6">
+                                                    <strong>Rating:</strong> ${movie.rating || 'N/A'}
+                                                </div>
+                                            </div>
+                                            ${movie.genres && movie.genres.length > 0 ? `
+                                                <div class="mt-2">
+                                                    ${movie.genres.slice(0, 3).map(genre => `<span class="badge bg-secondary me-1">${genre}</span>`).join('')}
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('');
+                            document.getElementById('moviesSection').innerHTML = '<div class="row">' + moviesHtml + '</div>';
+                        } else {
+                            document.getElementById('moviesSection').innerHTML = '<div class="text-center text-muted"><i class="bi bi-film display-1"></i><p class="mt-2">No movies found for the selected time period</p></div>';
+                        }
+
+                        // Display TV shows
+                        if (data.data.tv_shows && data.data.tv_shows.length > 0) {
+                            const tvHtml = data.data.tv_shows.map(show => `
+                                <div class="col-lg-4 col-md-6 mb-3">
+                                    <div class="card media-card h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-title fw-bold">${show.title} <span class="text-muted">(${show.year})</span></h6>
+                                            <p class="card-text text-muted small">${show.summary ? show.summary.substring(0, 120) + '...' : 'No summary available'}</p>
+                                            <div class="row small">
+                                                <div class="col-6">
+                                                    <strong>Added:</strong> ${show.added_date}
+                                                </div>
+                                                <div class="col-6">
+                                                    <strong>Episodes:</strong> ${show.episode_count || 'Unknown'}
+                                                </div>
+                                            </div>
+                                            ${show.genres && show.genres.length > 0 ? `
+                                                <div class="mt-2">
+                                                    ${show.genres.slice(0, 3).map(genre => `<span class="badge bg-secondary me-1">${genre}</span>`).join('')}
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('');
+                            document.getElementById('tvShowsSection').innerHTML = '<div class="row">' + tvHtml + '</div>';
+                        } else {
+                            document.getElementById('tvShowsSection').innerHTML = '<div class="text-center text-muted"><i class="bi bi-tv display-1"></i><p class="mt-2">No TV shows found for the selected time period</p></div>';
+                        }
+
+                        // Display schedule
+                        if (data.data.scheduled_shows && data.data.scheduled_shows.length > 0) {
+                            const scheduleHtml = data.data.scheduled_shows.map(show => `
+                                <div class="col-lg-4 col-md-6 mb-3">
+                                    <div class="card media-card h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-title fw-bold">${show.series_title}</h6>
+                                            <p class="card-text">${show.episode_title}</p>
+                                            <div class="row small">
+                                                <div class="col-6">
+                                                    <strong>Season:</strong> ${show.season}
+                                                </div>
+                                                <div class="col-6">
+                                                    <strong>Episode:</strong> ${show.episode}
+                                                </div>
+                                                <div class="col-12">
+                                                    <strong>Air Date:</strong> ${show.air_date}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('');
+                            document.getElementById('scheduleSection').innerHTML = '<div class="row">' + scheduleHtml + '</div>';
+                        } else {
+                            document.getElementById('scheduleSection').innerHTML = '<div class="text-center text-muted"><i class="bi bi-calendar-event display-1"></i><p class="mt-2">No scheduled shows for the selected time period</p></div>';
+                        }
+
+                        // Update timestamps
+                        document.getElementById('moviesLastUpdated').textContent = `Updated: ${formatTimestamp()}`;
+                        document.getElementById('tvLastUpdated').textContent = `Updated: ${formatTimestamp()}`;
+                        document.getElementById('scheduleLastUpdated').textContent = `Updated: ${formatTimestamp()}`;
+                    } else {
+                        // Handle API errors gracefully
+                        document.getElementById('moviesSection').innerHTML = '<div class="alert alert-warning">Unable to load movie data. Please check your Plex configuration.</div>';
+                        document.getElementById('tvShowsSection').innerHTML = '<div class="alert alert-warning">Unable to load TV show data. Please check your Plex configuration.</div>';
+                        document.getElementById('scheduleSection').innerHTML = '<div class="alert alert-warning">Unable to load schedule data. Please check your Sonarr configuration.</div>';
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('moviesSection').innerHTML = '<div class="alert alert-danger">Error loading content data</div>';
+                    document.getElementById('tvShowsSection').innerHTML = '<div class="alert alert-danger">Error loading content data</div>';
+                    document.getElementById('scheduleSection').innerHTML = '<div class="alert alert-danger">Error loading schedule data</div>';
+                });
+        }
+        
+        function loadLibraryStatsPromise() {
+            if (!document.getElementById('showLibraryStats').checked) return Promise.resolve();
+            
+            return fetch('/api/library_stats')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.library_stats) {
+                        const stats = data.library_stats;
+                        const statsHtml = `
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <div class="card bg-primary text-white h-100">
+                                        <div class="card-body text-center">
+                                            <h3 class="card-title">${stats.total_movies}</h3>
+                                            <p class="card-text">Total Movies</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="card bg-success text-white h-100">
+                                        <div class="card-body text-center">
+                                            <h3 class="card-title">${stats.total_shows}</h3>
+                                            <p class="card-text">Total TV Shows</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-title">Libraries</h6>
+                                            ${stats.libraries.map(lib => `
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <span><i class="bi bi-folder me-2"></i>${lib.title}</span>
+                                                    <span class="badge bg-secondary">${lib.count} items</span>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        document.getElementById('libraryStatsSection').innerHTML = statsHtml;
+                        document.getElementById('libraryStatsLastUpdated').textContent = `Updated: ${formatTimestamp()}`;
+                    } else {
+                        document.getElementById('libraryStatsSection').innerHTML = '<div class="alert alert-warning">Unable to load library statistics. Please check your Plex configuration.</div>';
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('libraryStatsSection').innerHTML = '<div class="alert alert-warning">Unable to load library statistics. Please check your Plex configuration.</div>';
+                });
         }
 
         function updateSectionVisibility() {
