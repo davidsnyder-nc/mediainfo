@@ -391,21 +391,21 @@ def api_status():
     if status['plex']['configured']:
         try:
             result = tracker.test_plex_connection()
-            status['plex']['connected'] = result.get('success', False)
+            status['plex']['connected'] = result and result.get('success', False)
         except:
             pass
     
     if status['sonarr']['configured']:
         try:
             result = tracker.test_sonarr_connection()
-            status['sonarr']['connected'] = result.get('success', False)
+            status['sonarr']['connected'] = result and result.get('success', False)
         except:
             pass
     
     if status['github']['configured']:
         try:
             result = tracker.test_github_connection()
-            status['github']['connected'] = result.get('success', False)
+            status['github']['connected'] = result and result.get('success', False)
         except:
             pass
     
