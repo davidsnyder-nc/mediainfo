@@ -35,6 +35,10 @@
             background-color: rgba(108, 117, 125, 0.1);
             border-bottom-color: rgba(108, 117, 125, 0.2);
         }
+        .scheduler-card .card-header {
+            background-color: rgba(255, 193, 7, 0.1);
+            border-bottom-color: rgba(255, 193, 7, 0.2);
+        }
     </style>
 </head>
 <body>
@@ -395,21 +399,52 @@
                 </div>
                 
 
-                <div class="card mt-4 config-section cron-card">
+                <!-- Scheduler Configuration Card -->
+                <div class="card mt-4 config-section scheduler-card">
                     <div class="card-header">
                         <h5 class="card-title mb-0">
-                            <i class="fas fa-info-circle me-2"></i>Cron Job Setup
+                            <i class="fas fa-clock me-2"></i>Automated Scheduling
                         </h5>
                     </div>
                     <div class="card-body">
-                        <p>To run this script daily via cron job, add the following line to your crontab:</p>
-                        <div class="bg-secondary p-3 rounded">
-                            <code>0 6 * * * cd /path/to/your/project && python run_daily.py</code>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="scheduler_enabled" name="scheduler_enabled" {{ 'checked' if config.scheduler_enabled else '' }}>
+                                    <label class="form-check-label" for="scheduler_enabled">
+                                        <strong>Enable Automatic Daily Sync</strong>
+                                    </label>
+                                </div>
+                                <p class="text-muted">When enabled, the media sync will run automatically every day at your specified time.</p>
+                            </div>
+                            <div class="col-md-6" id="scheduler_time_fields" style="display: {{ 'block' if config.scheduler_enabled else 'none' }};">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <label for="scheduler_hour" class="form-label">Hour (24h)</label>
+                                        <select class="form-select" id="scheduler_hour" name="scheduler_hour">
+                                            {% for hour in range(24) %}
+                                            <option value="{{ hour }}" {{ 'selected' if config.scheduler_hour == hour else '' }}>{{ '%02d'|format(hour) }}:00</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <label for="scheduler_minute" class="form-label">Minute</label>
+                                        <select class="form-select" id="scheduler_minute" name="scheduler_minute">
+                                            {% for minute in [0, 15, 30, 45] %}
+                                            <option value="{{ minute }}" {{ 'selected' if config.scheduler_minute == minute else '' }}>{{ minute:02d }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <small class="form-text mt-2">
-                            This runs the sync every day at 6:00 AM. Adjust the time as needed.
-                            Use <code>crontab -e</code> to edit your cron jobs.
-                        </small>
+                        
+                        {% if config.scheduler_enabled %}
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Scheduler Active:</strong> Daily sync will run at {{ config.scheduler_hour|default(19) }}:{{ '%02d'|format(config.scheduler_minute|default(55)) }} every day.
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -428,6 +463,12 @@
         document.getElementById('file_naming').addEventListener('change', function() {
             const customFields = document.getElementById('custom_filename_fields');
             customFields.style.display = this.value === 'custom' ? 'block' : 'none';
+        });
+        
+        // Toggle scheduler time fields visibility
+        document.getElementById('scheduler_enabled').addEventListener('change', function() {
+            const timeFields = document.getElementById('scheduler_time_fields');
+            timeFields.style.display = this.checked ? 'block' : 'none';
         });
     </script>
 </body>

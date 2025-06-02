@@ -5,6 +5,9 @@ import requests
 from flask import Flask, render_template, request, flash, redirect, url_for, session
 from config import ConfigManager
 from media_tracker import MediaTracker
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
+import atexit
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -14,6 +17,52 @@ app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-prod
 
 # Initialize configuration manager
 config_manager = ConfigManager()
+
+# Initialize scheduler
+scheduler = BackgroundScheduler()
+scheduler.start()
+
+# Register shutdown handler
+atexit.register(lambda: scheduler.shutdown())
+
+def scheduled_sync():
+    """Function to run scheduled daily sync"""
+    try:
+        logging.info("Running scheduled daily sync...")
+        config = config_manager.get_config()
+        tracker = MediaTracker(config)
+        results = tracker.run_daily_sync()
+        
+        if results['success']:
+            logging.info(f"Scheduled sync completed! Found {results['movies_count']} movies and {results['shows_count']} TV shows.")
+        else:
+            logging.error(f"Scheduled sync failed: {results['error']}")
+    except Exception as e:
+        logging.error(f"Error in scheduled sync: {str(e)}")
+
+def update_scheduler():
+    """Update scheduler based on current configuration"""
+    config = config_manager.get_config()
+    
+    # Remove existing job if it exists
+    try:
+        scheduler.remove_job('daily_sync')
+    except:
+        pass
+    
+    # Add new job if scheduling is enabled
+    if config.get('scheduler_enabled', False):
+        hour = config.get('scheduler_hour', 19)
+        minute = config.get('scheduler_minute', 55)
+        
+        scheduler.add_job(
+            func=scheduled_sync,
+            trigger=CronTrigger(hour=hour, minute=minute),
+            id='daily_sync',
+            name='Daily Media Sync',
+            replace_existing=True
+        )
+        logging.info(f"Scheduled daily sync for {hour:02d}:{minute:02d}")
 
 @app.route('/')
 def index():
@@ -44,7 +93,10 @@ def save_config():
             'github_enabled': request.form.get('github_enabled') == 'on',
             'github_repo': request.form.get('github_repo', '').strip(),
             'github_token': request.form.get('github_token', '').strip(),
-            'github_branch': request.form.get('github_branch', 'main').strip()
+            'github_branch': request.form.get('github_branch', 'main').strip(),
+            'scheduler_enabled': request.form.get('scheduler_enabled') == 'on',
+            'scheduler_hour': int(request.form.get('scheduler_hour', 19)),
+            'scheduler_minute': int(request.form.get('scheduler_minute', 55))
         }
         
         # Load existing config and merge with new data (allows partial updates)
@@ -68,6 +120,10 @@ def save_config():
         
         # Save configuration
         config_manager.save_config(existing_config)
+        
+        # Update scheduler with new settings
+        update_scheduler()
+        
         flash('Configuration saved successfully!', 'success')
         
     except Exception as e:
