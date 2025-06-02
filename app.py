@@ -2,7 +2,7 @@ import os
 import logging
 import uuid
 import requests
-from flask import Flask, render_template, request, flash, redirect, url_for, session
+from flask import Flask, render_template, request, flash, redirect, url_for, session, jsonify
 from config import ConfigManager
 from media_tracker import MediaTracker
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -10,6 +10,7 @@ from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 import atexit
 import pytz
+from datetime import datetime
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -358,6 +359,144 @@ def clear_config():
         flash(f'Error clearing configuration: {str(e)}', 'error')
     
     return redirect(url_for('index'))
+
+# JSON API Endpoints for external interfaces
+@app.route('/api/status')
+def api_status():
+    """Get current status of all services"""
+    config = config_manager.get_config()
+    tracker = MediaTracker(config)
+    
+    status = {
+        'plex': {
+            'configured': bool(config.get('plex_url') and config.get('plex_token')),
+            'connected': False
+        },
+        'sonarr': {
+            'configured': bool(config.get('sonarr_url') and config.get('sonarr_api_key')),
+            'connected': False
+        },
+        'github': {
+            'configured': bool(config.get('github_enabled') and config.get('github_token')),
+            'connected': False
+        },
+        'scheduler': {
+            'enabled': config.get('scheduler_enabled', False),
+            'type': config.get('schedule_type', 'daily'),
+            'next_run': None
+        }
+    }
+    
+    # Test connections
+    if status['plex']['configured']:
+        try:
+            result = tracker.test_plex_connection()
+            status['plex']['connected'] = result.get('success', False)
+        except:
+            pass
+    
+    if status['sonarr']['configured']:
+        try:
+            result = tracker.test_sonarr_connection()
+            status['sonarr']['connected'] = result.get('success', False)
+        except:
+            pass
+    
+    if status['github']['configured']:
+        try:
+            result = tracker.test_github_connection()
+            status['github']['connected'] = result.get('success', False)
+        except:
+            pass
+    
+    # Get next scheduled run
+    if scheduler.get_jobs():
+        next_job = scheduler.get_jobs()[0]
+        status['scheduler']['next_run'] = next_job.next_run_time.isoformat() if next_job.next_run_time else None
+    
+    return jsonify(status)
+
+@app.route('/api/recent')
+def api_recent():
+    """Get recent movies and TV shows with detailed information"""
+    config = config_manager.get_config()
+    tracker = MediaTracker(config)
+    
+    try:
+        movies, tv_shows = tracker.get_plex_recent_content()
+        return jsonify({
+            'success': True,
+            'movies': movies,
+            'tv_shows': tv_shows,
+            'timestamp': datetime.now(pytz.timezone(config.get('timezone', 'US/Eastern'))).isoformat()
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/schedule')
+def api_schedule():
+    """Get today's TV schedule with detailed information"""
+    config = config_manager.get_config()
+    tracker = MediaTracker(config)
+    
+    try:
+        scheduled_shows = tracker.get_sonarr_today_schedule()
+        return jsonify({
+            'success': True,
+            'scheduled_shows': scheduled_shows,
+            'timestamp': datetime.now(pytz.timezone(config.get('timezone', 'US/Eastern'))).isoformat()
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/full_sync')
+def api_full_sync():
+    """Get all data in one call - recent content and schedule"""
+    config = config_manager.get_config()
+    tracker = MediaTracker(config)
+    
+    try:
+        movies, tv_shows = tracker.get_plex_recent_content()
+        scheduled_shows = tracker.get_sonarr_today_schedule()
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'movies': movies,
+                'tv_shows': tv_shows,
+                'scheduled_shows': scheduled_shows
+            },
+            'timestamp': datetime.now(pytz.timezone(config.get('timezone', 'US/Eastern'))).isoformat(),
+            'timezone': config.get('timezone', 'US/Eastern')
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/config')
+def api_config():
+    """Get current configuration (excluding sensitive data)"""
+    config = config_manager.get_config()
+    
+    # Return config without sensitive information
+    safe_config = {
+        'plex_url': config.get('plex_url'),
+        'sonarr_url': config.get('sonarr_url'),
+        'filename': config.get('filename'),
+        'timezone': config.get('timezone'),
+        'movie_format': config.get('movie_format'),
+        'tv_format': config.get('tv_format'),
+        'schedule_format': config.get('schedule_format'),
+        'scheduler_enabled': config.get('scheduler_enabled'),
+        'schedule_type': config.get('schedule_type'),
+        'schedule_hour': config.get('schedule_hour'),
+        'schedule_minute': config.get('schedule_minute'),
+        'schedule_interval': config.get('schedule_interval'),
+        'github_enabled': config.get('github_enabled'),
+        'github_owner': config.get('github_owner'),
+        'github_repo': config.get('github_repo')
+    }
+    
+    return jsonify(safe_config)
 
 # Initialize scheduler now that all functions are defined
 init_scheduler()
