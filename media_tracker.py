@@ -50,6 +50,10 @@ class MediaTracker:
         movies = []
         tv_shows = []
         
+        # Check if Plex is configured
+        if not self.config.get('plex_url') or not self.config.get('plex_token'):
+            return movies, tv_shows
+        
         try:
             # Get all libraries
             url = urljoin(self.config['plex_url'], '/library/sections')
@@ -112,6 +116,10 @@ class MediaTracker:
     def get_sonarr_today_schedule(self):
         """Get TV shows scheduled for today from Sonarr"""
         scheduled_shows = []
+        
+        # Check if Sonarr is configured
+        if not self.config.get('sonarr_url') or not self.config.get('sonarr_api_key'):
+            return scheduled_shows
         
         try:
             today = datetime.now().strftime('%Y-%m-%d')

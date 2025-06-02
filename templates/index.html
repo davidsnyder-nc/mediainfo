@@ -673,7 +673,10 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('baseUrl').textContent = window.location.origin;
+            const baseUrlElement = document.getElementById('baseUrl');
+            if (baseUrlElement) {
+                baseUrlElement.textContent = window.location.origin;
+            }
 
             document.getElementById('schedule_type').addEventListener('change', function() {
                 const scheduleType = this.value;
