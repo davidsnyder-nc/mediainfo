@@ -196,8 +196,8 @@
                                     <div class="col-md-8 mb-3">
                                         <label for="plex_url" class="form-label">Plex Server URL</label>
                                         <input type="url" class="form-control" id="plex_url" name="plex_url" 
-                                               value="{{ config.plex_url or '' }}" 
-                                               placeholder="http://192.168.1.100:32400">
+                                               value="{{ config.plex_url or 'http://192.168.1.20:32400' }}" 
+                                               placeholder="http://192.168.1.20:32400">
                                         <div class="form-text">Include the full URL with port number</div>
                                     </div>
                                     <div class="col-md-4 mb-3">
@@ -217,10 +217,12 @@
                                                placeholder="Your Plex authentication token">
                                         <div class="form-text">Get this from your Plex account settings</div>
                                     </div>
-                                    <div class="col-md-4 mb-3 d-flex align-items-end">
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Alternative Method</label>
                                         <button type="button" class="btn btn-outline-primary w-100" onclick="startPlexAuth()">
                                             <i class="bi bi-shield-lock me-2"></i>OAuth Login
                                         </button>
+                                        <div class="form-text">Automatic token retrieval</div>
                                     </div>
                                 </div>
                             </div>
