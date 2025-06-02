@@ -303,26 +303,70 @@
                         </div>
 
                         <div class="config-group">
-                            <h5 class="mb-3">Format Templates</h5>
+                            <h5 class="mb-3">Report Customization</h5>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="report_title" class="form-label">Report Title</label>
+                                    <input type="text" class="form-control" id="report_title" name="report_title" 
+                                           value="{{ config.report_title or 'Media Tracker Report' }}" form="configForm">
+                                    <div class="form-text">Title that appears at the top of the report</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="file_naming" class="form-label">File Naming</label>
+                                    <select class="form-select" id="file_naming" name="file_naming" form="configForm">
+                                        <option value="date_suffix" {{ 'selected' if config.file_naming == 'date_suffix' else '' }}>media_tracker_2025-06-02.txt</option>
+                                        <option value="date_prefix" {{ 'selected' if config.file_naming == 'date_prefix' else '' }}>2025-06-02_media_tracker.txt</option>
+                                        <option value="custom" {{ 'selected' if config.file_naming == 'custom' else '' }}>Custom filename</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div id="customFilename" style="{{ 'display: none;' if config.file_naming != 'custom' else '' }}">
+                                <div class="mb-3">
+                                    <label for="single_output_file" class="form-label">Custom Filename</label>
+                                    <input type="text" class="form-control" id="single_output_file" name="single_output_file" 
+                                           value="{{ config.single_output_file or 'media_tracker.txt' }}" form="configForm">
+                                    <div class="form-text">Custom filename for the output file</div>
+                                </div>
+                            </div>
+
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="include_timestamps" name="include_timestamps" 
+                                       {{ 'checked' if config.include_timestamps != False else '' }} form="configForm">
+                                <label class="form-check-label" for="include_timestamps">
+                                    Include timestamps in report
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="config-group">
+                            <h5 class="mb-3">Content Format Templates</h5>
                             <div class="mb-3">
                                 <label for="movie_format" class="form-label">Movie Format</label>
                                 <input type="text" class="form-control" id="movie_format" name="movie_format" 
-                                       value="{{ config.movie_format or '{title} ({year}) - Added: {added_date}' }}" form="configForm">
-                                <div class="form-text">Available variables: {title}, {year}, {added_date}</div>
+                                       value="{{ config.movie_format or 'Title: {title}\nYear: {year}\nAdded: {added_date}\n{separator}' }}" form="configForm">
+                                <div class="form-text">Available variables: {title}, {year}, {added_date}, {separator}</div>
                             </div>
                             
                             <div class="mb-3">
                                 <label for="tv_format" class="form-label">TV Show Format</label>
                                 <input type="text" class="form-control" id="tv_format" name="tv_format" 
-                                       value="{{ config.tv_format or '{title} - Added: {added_date}' }}" form="configForm">
-                                <div class="form-text">Available variables: {title}, {added_date}</div>
+                                       value="{{ config.tv_format or 'Title: {title}\nYear: {year}\nAdded: {added_date}\n{separator}' }}" form="configForm">
+                                <div class="form-text">Available variables: {title}, {year}, {added_date}, {separator}</div>
                             </div>
                             
                             <div class="mb-3">
                                 <label for="schedule_format" class="form-label">Schedule Format</label>
                                 <input type="text" class="form-control" id="schedule_format" name="schedule_format" 
-                                       value="{{ config.schedule_format or '{series_title} - S{season:02d}E{episode:02d} - {episode_title} (Airs: {air_date})' }}" form="configForm">
-                                <div class="form-text">Available variables: {series_title}, {episode_title}, {season}, {episode}, {air_date}</div>
+                                       value="{{ config.schedule_format or 'Series: {series_title}\nEpisode: S{season:02d}E{episode:02d} - {episode_title}\nAir Date: {air_date}\n{separator}' }}" form="configForm">
+                                <div class="form-text">Available variables: {series_title}, {episode_title}, {season}, {episode}, {air_date}, {separator}</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="section_separator" class="form-label">Section Separator</label>
+                                <input type="text" class="form-control" id="section_separator" name="section_separator" 
+                                       value="{{ config.section_separator or '=' * 50 }}" form="configForm">
+                                <div class="form-text">Text used to separate different sections in the report</div>
                             </div>
                         </div>
 
@@ -672,6 +716,10 @@
 
             document.getElementById('github_enabled').addEventListener('change', function() {
                 document.getElementById('githubSettings').style.display = this.checked ? 'block' : 'none';
+            });
+
+            document.getElementById('file_naming').addEventListener('change', function() {
+                document.getElementById('customFilename').style.display = this.value === 'custom' ? 'block' : 'none';
             });
 
             document.getElementById('configForm').addEventListener('submit', function(e) {
