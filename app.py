@@ -85,14 +85,22 @@ def update_scheduler():
         elif schedule_type == 'hourly':
             interval_hours = config.get('interval_hours', 1)
             
+            # Create hourly schedule that runs at the top of each hour
+            if interval_hours == 1:
+                # Every hour at minute 0
+                hour_schedule = '*'
+            else:
+                # Every X hours starting at midnight, at minute 0
+                hour_schedule = f'*/{interval_hours}'
+            
             scheduler.add_job(
                 func=scheduled_sync,
-                trigger=IntervalTrigger(hours=interval_hours, timezone=eastern),
+                trigger=CronTrigger(hour=hour_schedule, minute=0, timezone=eastern),
                 id='media_sync',
-                name=f'Hourly Media Sync (every {interval_hours}h)',
+                name=f'Hourly Media Sync (every {interval_hours}h at :00)',
                 replace_existing=True
             )
-            logging.info(f"Scheduled sync every {interval_hours} hour(s) Eastern")
+            logging.info(f"Scheduled sync every {interval_hours} hour(s) at the top of the hour (Eastern)")
 
 @app.route('/')
 def index():

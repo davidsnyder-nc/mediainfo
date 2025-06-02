@@ -470,7 +470,7 @@
                             <i class="fas fa-info-circle me-2"></i>
                             <strong>Scheduler Active:</strong> 
                             {% if config.schedule_type == 'hourly' %}
-                                Sync will run every {{ config.interval_hours|default(1) }} hour(s) (Eastern timezone).
+                                Sync will run every {{ config.interval_hours|default(1) }} hour(s) at the top of the hour (Eastern timezone).
                             {% else %}
                                 Daily sync will run at {{ config.scheduler_hour|default(19) }}:{{ '%02d'|format(config.scheduler_minute|default(55)) }} Eastern time.
                             {% endif %}
