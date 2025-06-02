@@ -69,8 +69,76 @@
 
     <div class="container my-4">
         
-        <!-- Status Section -->
+        <!-- Dashboard Controls -->
         <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-sliders me-2"></i>Dashboard Settings</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-3">
+                                <label for="daysRange" class="form-label">Time Range</label>
+                                <select class="form-select" id="daysRange">
+                                    <option value="1">Last 1 day</option>
+                                    <option value="3">Last 3 days</option>
+                                    <option value="7" selected>Last 7 days</option>
+                                    <option value="14">Last 14 days</option>
+                                    <option value="30">Last 30 days</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Show Sections</label>
+                                <div class="d-flex flex-wrap gap-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="showStatus" checked>
+                                        <label class="form-check-label" for="showStatus">System Status</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="showMovies" checked>
+                                        <label class="form-check-label" for="showMovies">Movies</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="showTVShows" checked>
+                                        <label class="form-check-label" for="showTVShows">TV Shows</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="showSchedule" checked>
+                                        <label class="form-check-label" for="showSchedule">TV Schedule</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="showLibraryStats">
+                                        <label class="form-check-label" for="showLibraryStats">Library Stats</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Display Options</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="showExtendedInfo">
+                                    <label class="form-check-label" for="showExtendedInfo">Show Extended Info</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="autoRefresh">
+                                    <label class="form-check-label" for="autoRefresh">Auto Refresh (5min)</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <button class="btn btn-primary" onclick="refreshDashboard()">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>Apply Settings & Refresh
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Section -->
+        <div class="row mb-4" id="statusRow">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
@@ -90,7 +158,7 @@
         </div>
 
         <!-- Recent Movies -->
-        <div class="row mb-4">
+        <div class="row mb-4" id="moviesRow">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
@@ -110,7 +178,7 @@
         </div>
 
         <!-- Recent TV Shows -->
-        <div class="row mb-4">
+        <div class="row mb-4" id="tvShowsRow">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
@@ -129,12 +197,12 @@
             </div>
         </div>
 
-        <!-- Today's Schedule -->
-        <div class="row mb-4">
+        <!-- TV Schedule -->
+        <div class="row mb-4" id="scheduleRow">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0"><i class="bi bi-calendar-event me-2"></i>Today's TV Schedule</h5>
+                        <h5 class="mb-0"><i class="bi bi-calendar-event me-2"></i>TV Schedule</h5>
                         <span class="last-updated" id="scheduleLastUpdated">Loading...</span>
                     </div>
                     <div class="card-body" id="scheduleSection">
@@ -142,7 +210,27 @@
                             <div class="spinner-border text-primary" role="status">
                                 <span class="visually-hidden">Loading...</span>
                             </div>
-                            <p class="mt-2 text-muted">Loading today's schedule...</p>
+                            <p class="mt-2 text-muted">Loading TV schedule...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Library Statistics -->
+        <div class="row mb-4" id="libraryStatsRow" style="display: none;">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-bar-chart me-2"></i>Library Statistics</h5>
+                        <span class="last-updated" id="libraryStatsLastUpdated">Loading...</span>
+                    </div>
+                    <div class="card-body" id="libraryStatsSection">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Loading library statistics...</p>
                         </div>
                     </div>
                 </div>
@@ -215,8 +303,17 @@
                 });
         }
 
+        function getDaysRange() {
+            return document.getElementById('daysRange').value;
+        }
+
+        function getShowExtendedInfo() {
+            return document.getElementById('showExtendedInfo').checked;
+        }
+
         function loadRecentContent() {
-            fetch('/api/full_sync')
+            const days = getDaysRange();
+            fetch(`/api/full_sync?days=${days}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -344,12 +441,116 @@
             }, 1000);
         }
 
-        // Initial load
-        loadStatus();
-        loadRecentContent();
+        function refreshDashboard() {
+            updateSectionVisibility();
+            loadStatus();
+            loadRecentContent();
+            loadLibraryStats();
+            setupAutoRefresh();
+        }
 
-        // Auto-refresh every 5 minutes
-        setInterval(refreshData, 5 * 60 * 1000);
+        function updateSectionVisibility() {
+            // Status section
+            const statusRow = document.getElementById('statusRow');
+            if (statusRow) statusRow.style.display = document.getElementById('showStatus').checked ? 'block' : 'none';
+            
+            // Movies section  
+            const moviesRow = document.getElementById('moviesRow');
+            if (moviesRow) moviesRow.style.display = document.getElementById('showMovies').checked ? 'block' : 'none';
+            
+            // TV Shows section
+            const tvRow = document.getElementById('tvShowsRow');
+            if (tvRow) tvRow.style.display = document.getElementById('showTVShows').checked ? 'block' : 'none';
+            
+            // Schedule section
+            const scheduleRow = document.getElementById('scheduleRow');
+            if (scheduleRow) scheduleRow.style.display = document.getElementById('showSchedule').checked ? 'block' : 'none';
+            
+            // Library Stats section
+            const libraryStatsRow = document.getElementById('libraryStatsRow');
+            if (libraryStatsRow) libraryStatsRow.style.display = document.getElementById('showLibraryStats').checked ? 'block' : 'none';
+        }
+
+        function loadLibraryStats() {
+            if (!document.getElementById('showLibraryStats').checked) return;
+            
+            fetch('/api/library_stats')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.library_stats) {
+                        const stats = data.library_stats;
+                        const statsHtml = `
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <div class="card bg-primary text-white h-100">
+                                        <div class="card-body text-center">
+                                            <h3 class="card-title">${stats.total_movies}</h3>
+                                            <p class="card-text">Total Movies</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="card bg-success text-white h-100">
+                                        <div class="card-body text-center">
+                                            <h3 class="card-title">${stats.total_shows}</h3>
+                                            <p class="card-text">Total TV Shows</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-title">Libraries</h6>
+                                            ${stats.libraries.map(lib => `
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <span><i class="bi bi-folder me-2"></i>${lib.title}</span>
+                                                    <span class="badge bg-secondary">${lib.count} items</span>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        document.getElementById('libraryStatsSection').innerHTML = statsHtml;
+                        document.getElementById('libraryStatsLastUpdated').textContent = `Updated: ${formatTimestamp()}`;
+                    } else {
+                        document.getElementById('libraryStatsSection').innerHTML = '<div class="alert alert-warning">Unable to load library statistics</div>';
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('libraryStatsSection').innerHTML = '<div class="alert alert-danger">Error loading library statistics</div>';
+                });
+        }
+
+        let autoRefreshInterval;
+        function setupAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+            
+            if (document.getElementById('autoRefresh').checked) {
+                autoRefreshInterval = setInterval(() => {
+                    loadStatus();
+                    loadRecentContent();
+                    loadLibraryStats();
+                }, 5 * 60 * 1000);
+            }
+        }
+
+        // Add event listeners for settings changes
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('daysRange').addEventListener('change', refreshDashboard);
+            
+            ['showStatus', 'showMovies', 'showTVShows', 'showSchedule', 'showLibraryStats'].forEach(id => {
+                document.getElementById(id).addEventListener('change', updateSectionVisibility);
+            });
+            
+            document.getElementById('autoRefresh').addEventListener('change', setupAutoRefresh);
+        });
+
+        // Initial load
+        refreshDashboard();
     </script>
 
     <style>
