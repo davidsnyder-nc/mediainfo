@@ -25,6 +25,16 @@ scheduler.start()
 # Register shutdown handler
 atexit.register(lambda: scheduler.shutdown())
 
+# Initialize scheduler on startup
+def init_scheduler():
+    """Initialize scheduler with current configuration on app startup"""
+    try:
+        update_scheduler()
+    except Exception as e:
+        logging.error(f"Error initializing scheduler: {e}")
+
+# Initialize scheduler after all functions are defined
+
 def scheduled_sync():
     """Function to run scheduled daily sync"""
     try:
@@ -318,6 +328,9 @@ def clear_config():
         flash(f'Error clearing configuration: {str(e)}', 'error')
     
     return redirect(url_for('index'))
+
+# Initialize scheduler now that all functions are defined
+init_scheduler()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3038, debug=True)

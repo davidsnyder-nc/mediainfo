@@ -431,7 +431,7 @@
                                         <label for="scheduler_minute" class="form-label">Minute</label>
                                         <select class="form-select" id="scheduler_minute" name="scheduler_minute">
                                             {% for minute in [0, 15, 30, 45] %}
-                                            <option value="{{ minute }}" {{ 'selected' if config.scheduler_minute == minute else '' }}>{{ minute:02d }}</option>
+                                            <option value="{{ minute }}" {{ 'selected' if config.scheduler_minute == minute else '' }}>{{ '%02d'|format(minute) }}</option>
                                             {% endfor %}
                                         </select>
                                     </div>

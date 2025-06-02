@@ -27,6 +27,9 @@ class ConfigManager:
             'github_repo': '',
             'github_token': '',
             'github_branch': 'main',
+            'scheduler_enabled': False,
+            'scheduler_hour': 19,
+            'scheduler_minute': 55,
             'output_format': {
                 'movie_format': 'Title: {title}\nYear: {year}\nAdded: {added_date}\n{separator}',
                 'tv_format': 'Title: {title}\nYear: {year}\nAdded: {added_date}\n{separator}',
