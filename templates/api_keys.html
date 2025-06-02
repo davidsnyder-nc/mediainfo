@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Key Management - Media Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+        }
+        .card-header {
+            background-color: #fff;
+            border-bottom: 1px solid #e9ecef;
+            border-radius: 12px 12px 0 0 !important;
+            padding: 1rem 1.5rem;
+        }
+        .icon-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+        }
+        .alert {
+            border-radius: 8px;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="/">
+                <i class="bi bi-collection-play me-2"></i>Media Tracker
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a href="/" class="nav-link">
+                    <i class="bi bi-gear me-1"></i>Configuration
+                </a>
+                <a href="/api_keys" class="nav-link">
+                    <i class="bi bi-key me-1"></i>API Keys
+                </a>
+                <a href="/help" class="nav-link">
+                    <i class="bi bi-question-circle me-1"></i>Help
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <div class="row">
+            <div class="col-12">
+                <h2><i class="bi bi-key me-2"></i>API Key Management</h2>
+                <p class="text-muted">Create and manage API keys for external applications to access your media tracker data.</p>
+
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <!-- Create New API Key -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-plus-circle me-2"></i>Create New API Key</h5>
+                    </div>
+                    <div class="card-body">
+                        <form action="{{ url_for('create_api_key') }}" method="POST">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <label for="name" class="form-label">API Key Name</label>
+                                    <input type="text" class="form-control" id="name" name="name" placeholder="e.g., Home Assistant, Mobile App, etc." required>
+                                    <div class="form-text">Give your API key a descriptive name to identify its purpose.</div>
+                                </div>
+                                <div class="col-md-4 d-flex align-items-end pb-3">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-key me-1"></i>Create API Key
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Existing API Keys -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-list me-2"></i>Existing API Keys</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if api_keys %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>API Key</th>
+                                            <th>Status</th>
+                                            <th>Created</th>
+                                            <th>Last Used</th>
+                                            <th>Usage Count</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for key_info in api_keys %}
+                                        <tr>
+                                            <td><strong>{{ key_info.name }}</strong></td>
+                                            <td>
+                                                <code class="user-select-all">{{ key_info.key }}</code>
+                                                <button class="btn btn-sm btn-outline-secondary ms-2" onclick="copyToClipboard('{{ key_info.key }}')">
+                                                    <i class="bi bi-clipboard"></i>
+                                                </button>
+                                            </td>
+                                            <td>
+                                                {% if key_info.is_active %}
+                                                    <span class="badge bg-success">Active</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Inactive</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ key_info.created_at[:19] if key_info.created_at else 'Unknown' }}</td>
+                                            <td>{{ key_info.last_used[:19] if key_info.last_used else 'Never' }}</td>
+                                            <td>{{ key_info.usage_count }}</td>
+                                            <td>
+                                                {% if key_info.is_active %}
+                                                    <a href="{{ url_for('deactivate_api_key', key=key_info.key) }}" 
+                                                       class="btn btn-sm btn-outline-danger"
+                                                       onclick="return confirm('Are you sure you want to deactivate this API key?')">
+                                                        <i class="bi bi-x-circle me-1"></i>Deactivate
+                                                    </a>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="bi bi-key display-1 text-muted"></i>
+                                <p class="text-muted mt-2">No API keys created yet. Create your first API key above.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- API Usage Information -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>API Usage</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6>How to use API keys:</h6>
+                        <p class="mb-3">Include your API key in requests using one of these methods:</p>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Header Method (Recommended):</h6>
+                                <pre class="bg-dark text-light p-3 rounded"><code>curl -H "X-API-Key: YOUR_API_KEY" \
+     {{ request.host_url }}api/recent</code></pre>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Query Parameter Method:</h6>
+                                <pre class="bg-dark text-light p-3 rounded"><code>curl "{{ request.host_url }}api/recent?api_key=YOUR_API_KEY"</code></pre>
+                            </div>
+                        </div>
+
+                        <h6 class="mt-4">Available API Endpoints:</h6>
+                        <ul class="list-unstyled">
+                            <li><code>/api/recent</code> - Recent movies and TV shows</li>
+                            <li><code>/api/all_content</code> - All Plex library content</li>
+                            <li><code>/api/schedule</code> - TV schedule</li>
+                            <li><code>/api/full_sync</code> - Combined recent content and schedule</li>
+                            <li><code>/api/library_stats</code> - Plex library statistics</li>
+                            <li><code>/api/config</code> - Current configuration (safe data only)</li>
+                        </ul>
+
+                        <div class="alert alert-info">
+                            <i class="bi bi-shield-check me-2"></i>
+                            <strong>Security Note:</strong> Keep your API keys secure. They provide access to your media data. 
+                            Deactivate any keys that are no longer needed or may have been compromised.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                // Show temporary success feedback
+                const btn = event.target.closest('button');
+                const originalContent = btn.innerHTML;
+                btn.innerHTML = '<i class="bi bi-check"></i>';
+                btn.classList.remove('btn-outline-secondary');
+                btn.classList.add('btn-success');
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalContent;
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-outline-secondary');
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

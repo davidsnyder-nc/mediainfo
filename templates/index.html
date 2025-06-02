@@ -123,11 +123,14 @@
                 <i class="bi bi-collection-play me-2"></i>Media Tracker
             </a>
             <div class="navbar-nav ms-auto">
-                <span class="navbar-text text-muted me-3">
-                    <i class="bi bi-gear me-1"></i>Configuration Panel
-                </span>
-                <a href="/dashboard" class="btn btn-outline-primary">
-                    <i class="bi bi-window me-1"></i>Dashboard
+                <a href="/" class="nav-link">
+                    <i class="bi bi-gear me-1"></i>Configuration
+                </a>
+                <a href="/api_keys" class="nav-link">
+                    <i class="bi bi-key me-1"></i>API Keys
+                </a>
+                <a href="/help" class="nav-link">
+                    <i class="bi bi-question-circle me-1"></i>Help
                 </a>
             </div>
         </div>
@@ -250,7 +253,7 @@
                                     <label for="sonarr_url" class="form-label">Sonarr URL</label>
                                     <input type="url" class="form-control" id="sonarr_url" name="sonarr_url" 
                                            value="{{ config.sonarr_url or '' }}" 
-                                           placeholder="http://192.168.1.100:8989" form="configForm">
+                                           placeholder="http://192.168.1.20:8989" form="configForm">
                                     <div class="form-text">Include the full URL with port number</div>
                                 </div>
                                 <div class="col-md-4 mb-3">
@@ -289,11 +292,7 @@
                         <div class="config-group">
                             <h5 class="mb-3">File Settings</h5>
                             <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="filename" class="form-label">Output Filename</label>
-                                    <input type="text" class="form-control" id="filename" name="filename" 
-                                           value="{{ config.filename or 'daily_media_report.txt' }}" form="configForm">
-                                </div>
+
                                 <div class="col-md-6 mb-3">
                                     <label for="timezone" class="form-label">Timezone</label>
                                     <select class="form-select" id="timezone" name="timezone" form="configForm">
@@ -341,6 +340,62 @@
                                 <label class="form-check-label" for="include_timestamps">
                                     Include timestamps in report
                                 </label>
+                            </div>
+                        </div>
+
+                        <div class="config-group">
+                            <h5 class="mb-3">Report Sections</h5>
+                            <p class="text-muted mb-3">Choose which sections to include in your report</p>
+                            
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="include_movies" name="include_movies" 
+                                       {{ 'checked' if config.include_movies != False else '' }} form="configForm">
+                                <label class="form-check-label" for="include_movies">
+                                    <i class="bi bi-film me-2"></i>Include Plex Movies
+                                </label>
+                                <div class="form-text">Movies recently added to your Plex library</div>
+                            </div>
+                            
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="include_tv_shows" name="include_tv_shows" 
+                                       {{ 'checked' if config.include_tv_shows != False else '' }} form="configForm">
+                                <label class="form-check-label" for="include_tv_shows">
+                                    <i class="bi bi-collection-play me-2"></i>Include Plex TV Shows
+                                </label>
+                                <div class="form-text">TV shows recently added to your Plex library</div>
+                            </div>
+                            
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="include_tv_calendar" name="include_tv_calendar" 
+                                       {{ 'checked' if config.include_tv_calendar != False else '' }} form="configForm">
+                                <label class="form-check-label" for="include_tv_calendar">
+                                    <i class="bi bi-calendar3 me-2"></i>Include TV Schedule
+                                </label>
+                                <div class="form-text">Today's TV show schedule from Sonarr</div>
+                            </div>
+                        </div>
+
+                        <div class="config-group">
+                            <h5 class="mb-3">Section Titles</h5>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="movies_title" class="form-label">Movies Section Title</label>
+                                    <input type="text" class="form-control" id="movies_title" name="movies_title" 
+                                           value="{{ config.movies_title or 'PLEX MOVIES ADDED' }}" form="configForm"
+                                           placeholder="PLEX MOVIES ADDED">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="tv_shows_title" class="form-label">TV Shows Section Title</label>
+                                    <input type="text" class="form-control" id="tv_shows_title" name="tv_shows_title" 
+                                           value="{{ config.tv_shows_title or 'PLEX TV SHOWS ADDED' }}" form="configForm"
+                                           placeholder="PLEX TV SHOWS ADDED">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="tv_calendar_title" class="form-label">TV Schedule Section Title</label>
+                                    <input type="text" class="form-control" id="tv_calendar_title" name="tv_calendar_title" 
+                                           value="{{ config.tv_calendar_title or 'TV SHOWS AIRING TODAY' }}" form="configForm"
+                                           placeholder="TV SHOWS AIRING TODAY">
+                                </div>
                             </div>
                         </div>
 
@@ -502,7 +557,7 @@
                                 <div class="config-group">
                                     <h5 class="mb-3">Test Connections</h5>
                                     <div class="d-grid gap-2">
-                                        <button type="button" class="btn btn-outline-primary" onclick="testConnection()">
+                                        <button type="button" class="btn btn-outline-primary" onclick="testConnection(event)">
                                             <i class="bi bi-wifi me-2"></i>Test All Connections
                                         </button>
                                     </div>
@@ -512,7 +567,7 @@
                                 <div class="config-group">
                                     <h5 class="mb-3">Manual Sync</h5>
                                     <div class="d-grid gap-2">
-                                        <button type="button" class="btn btn-success" onclick="runDailySync()">
+                                        <button type="button" class="btn btn-success" onclick="runDailySync(event)">
                                             <i class="bi bi-arrow-repeat me-2"></i>Run Daily Sync
                                         </button>
                                     </div>
@@ -639,6 +694,9 @@
                                 <a href="/dashboard" target="_blank" class="btn btn-success">
                                     <i class="bi bi-window me-2"></i>View Sample Dashboard
                                 </a>
+                                <a href="/dashboard/download" class="btn btn-outline-primary">
+                                    <i class="bi bi-download me-2"></i>Download Dashboard HTML
+                                </a>
                             </div>
                         </div>
 
@@ -646,6 +704,33 @@
                             <h5 class="mb-3">Test Result</h5>
                             <div class="alert alert-info">
                                 <pre id="apiResponse"></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Configuration Section -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Dashboard Configuration</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="dashboard_days" class="form-label">Content History (Days)</label>
+                                        <input type="number" class="form-control" id="dashboard_days" name="dashboard_days" 
+                                               value="{{ config.get('dashboard_days', 3650) }}" min="1" max="3650">
+                                        <div class="form-text">Number of days of content history to show in the dashboard (1-3650)</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="dashboard_max_items" class="form-label">Maximum Items</label>
+                                        <input type="number" class="form-control" id="dashboard_max_items" name="dashboard_max_items" 
+                                               value="{{ config.get('dashboard_max_items', 100) }}" min="1" max="1000">
+                                        <div class="form-text">Maximum number of items to display in the dashboard (1-1000)</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -669,12 +754,48 @@
             window.open('/plex_auth', 'plexAuth', 'width=600,height=600');
         }
 
-        function testConnection() {
+        function updateConnectionStatus() {
+            fetch('/test_connection')
+                .then(response => response.json())
+                .then(data => {
+                    // Update Plex status
+                    const plexStatus = document.querySelector('#plex .status-indicator');
+                    const plexText = plexStatus.nextSibling;
+                    if (data.plex) {
+                        plexStatus.className = 'status-indicator status-connected';
+                        plexText.textContent = ' Connected';
+                    } else {
+                        plexStatus.className = 'status-indicator status-unknown';
+                        plexText.textContent = ' Not Configured';
+                    }
+                    
+                    // Update Sonarr status
+                    const sonarrStatus = document.querySelector('#sonarr .status-indicator');
+                    const sonarrText = sonarrStatus.nextSibling;
+                    if (data.sonarr) {
+                        sonarrStatus.className = 'status-indicator status-connected';
+                        sonarrText.textContent = ' Connected';
+                    } else {
+                        sonarrStatus.className = 'status-indicator status-unknown';
+                        sonarrText.textContent = ' Not Configured';
+                    }
+                })
+                .catch(err => console.log('Connection status update failed:', err));
+        }
+
+        // Update status after form submission
+        document.getElementById('configForm').addEventListener('submit', function() {
+            setTimeout(updateConnectionStatus, 1000);
+        });
+
+        function testConnection(event) {
             const btn = event.target;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="bi bi-arrow-repeat me-2 spinner-border spinner-border-sm"></i>Testing...';
+            if (!btn) return;
             
-            fetch('/test_connection', { method: 'POST' })
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Testing...';
+            
+            fetch('/test_connection')
                 .then(response => response.json())
                 .then(data => {
                     let message = '';
@@ -687,16 +808,21 @@
                     
                     document.getElementById('saveStatus').innerHTML = '<div class="alert alert-info">' + message + '</div>';
                 })
+                .catch(err => {
+                    document.getElementById('saveStatus').innerHTML = '<div class="alert alert-danger">Connection test failed</div>';
+                })
                 .finally(() => {
                     btn.disabled = false;
                     btn.innerHTML = '<i class="bi bi-wifi me-2"></i>Test All Connections';
                 });
         }
 
-        function runDailySync() {
+        function runDailySync(event) {
             const btn = event.target;
+            if (!btn) return;
+            
             btn.disabled = true;
-            btn.innerHTML = '<i class="bi bi-arrow-repeat me-2 spinner-border spinner-border-sm"></i>Running...';
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Running...';
             
             fetch('/run_daily_sync', { method: 'POST' })
                 .then(response => response.json())

@@ -16,10 +16,21 @@ class MediaTracker:
     def test_plex_connection(self):
         """Test connection to Plex API"""
         try:
-            url = urljoin(self.config['plex_url'], '/identity')
-            headers = {'X-Plex-Token': self.config['plex_token']}
+            plex_url = self.config.get('plex_url', '').strip()
+            plex_token = self.config.get('plex_token', '').strip()
             
-            response = self.session.get(url, headers=headers)
+            if not plex_url or not plex_token:
+                logging.error("Plex URL or token not configured")
+                return False
+            
+            # Ensure URL has protocol
+            if not plex_url.startswith(('http://', 'https://')):
+                plex_url = 'http://' + plex_url
+            
+            url = urljoin(plex_url, '/identity')
+            headers = {'X-Plex-Token': plex_token}
+            
+            response = self.session.get(url, headers=headers, timeout=2)
             response.raise_for_status()
             
             logging.info("Plex connection successful")
@@ -32,10 +43,24 @@ class MediaTracker:
     def test_sonarr_connection(self):
         """Test connection to Sonarr API"""
         try:
-            url = urljoin(self.config['sonarr_url'], '/api/v3/system/status')
-            headers = {'X-Api-Key': self.config['sonarr_api_key']}
+            sonarr_url = self.config.get('sonarr_url', '').strip()
+            sonarr_api_key = self.config.get('sonarr_api_key', '').strip()
             
-            response = self.session.get(url, headers=headers)
+            logging.info(f"Testing Sonarr connection - URL: {sonarr_url}, API Key: {'***' if sonarr_api_key else 'None'}")
+            
+            if not sonarr_url or not sonarr_api_key:
+                logging.error("Sonarr URL or API key not configured")
+                return False
+            
+            # Ensure URL has protocol
+            if not sonarr_url.startswith(('http://', 'https://')):
+                sonarr_url = 'http://' + sonarr_url
+            
+            url = urljoin(sonarr_url, '/api/v3/system/status')
+            headers = {'X-Api-Key': sonarr_api_key}
+            
+            logging.info(f"Making request to: {url}")
+            response = self.session.get(url, headers=headers, timeout=2)
             response.raise_for_status()
             
             logging.info("Sonarr connection successful")
@@ -172,18 +197,17 @@ class MediaTracker:
             os.makedirs(output_dir, exist_ok=True)
             
             today_str = datetime.now().strftime('%Y-%m-%d')
-            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S') if self.config.get('output_format', {}).get('include_timestamps', True) else ''
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S') if self.config.get('include_timestamps', True) else ''
             
             # Get custom formats
-            output_format = self.config.get('output_format', {})
-            movie_format = output_format.get('movie_format', 'Title: {title}\nYear: {year}\nAdded: {added_date}\n{separator}')
-            tv_format = output_format.get('tv_format', 'Title: {title}\nYear: {year}\nAdded: {added_date}\n{separator}')
-            schedule_format = output_format.get('schedule_format', 'Series: {series_title}\nEpisode: S{season:02d}E{episode:02d} - {episode_title}\nAir Date: {air_date}\n{separator}')
-            file_naming = output_format.get('file_naming', 'date_suffix')
+            movie_format = self.config.get('movie_format', 'Title: {title}\nYear: {year}\nAdded: {added_date}\n{separator}')
+            tv_format = self.config.get('tv_format', 'Title: {title}\nYear: {year}\nAdded: {added_date}\n{separator}')
+            schedule_format = self.config.get('schedule_format', 'Series: {series_title}\nEpisode: S{season:02d}E{episode:02d} - {episode_title}\nAir Date: {air_date}\n{separator}')
+            file_naming = self.config.get('file_naming', 'date_suffix')
             
             # Single output file
             if file_naming == 'custom':
-                output_file = os.path.join(output_dir, output_format.get('single_output_file', 'media_tracker.txt'))
+                output_file = os.path.join(output_dir, self.config.get('single_output_file', 'media_tracker.txt'))
             elif file_naming == 'date_prefix':
                 output_file = os.path.join(output_dir, f'{today_str}_media_tracker.txt')
             else:  # date_suffix (default)
@@ -199,9 +223,12 @@ class MediaTracker:
                 f.write(header + "\n")
                 f.write("=" * len(header) + "\n\n")
                 
+                logging.info(f"Writing file with: {len(movies)} movies, {len(tv_shows)} TV shows, {len(scheduled_shows)} scheduled shows")
+                logging.info(f"Section toggles - Movies: {self.config.get('include_movies', True)}, TV: {self.config.get('include_tv_shows', True)}, Schedule: {self.config.get('include_tv_calendar', True)}")
+                
                 # Movies section
                 if self.config.get('include_movies', True):
-                    movies_title = self.config.get('movies_section_title', 'PLEX MOVIES ADDED')
+                    movies_title = self.config.get('movies_title', 'PLEX MOVIES ADDED')
                     f.write(f"{movies_title}\n")
                     f.write("=" * len(movies_title) + "\n")
                     if movies:
@@ -219,7 +246,7 @@ class MediaTracker:
                 
                 # TV Shows section
                 if self.config.get('include_tv_shows', True):
-                    tv_shows_title = self.config.get('tv_shows_section_title', 'PLEX TV SHOWS ADDED')
+                    tv_shows_title = self.config.get('tv_shows_title', 'PLEX TV SHOWS ADDED')
                     f.write(f"\n{tv_shows_title}\n")
                     f.write("=" * len(tv_shows_title) + "\n")
                     if tv_shows:
@@ -237,7 +264,7 @@ class MediaTracker:
                 
                 # Schedule section
                 if self.config.get('include_tv_calendar', True):
-                    tv_calendar_title = self.config.get('tv_calendar_section_title', 'SONARR TV SCHEDULE')
+                    tv_calendar_title = self.config.get('tv_calendar_title', 'TV SHOWS AIRING TODAY')
                     f.write(f"\n{tv_calendar_title}\n")
                     f.write("=" * len(tv_calendar_title) + "\n")
                     if scheduled_shows:
@@ -273,14 +300,16 @@ class MediaTracker:
             if not self.config.get('github_enabled', False):
                 return False
                 
+            owner = self.config.get('github_owner', '')
             repo = self.config.get('github_repo', '')
             token = self.config.get('github_token', '')
             
-            if not repo or not token:
+            if not owner or not repo or not token:
                 return False
             
             # Test by getting repository info
-            url = f"https://api.github.com/repos/{repo}"
+            full_repo = f"{owner}/{repo}"
+            url = f"https://api.github.com/repos/{full_repo}"
             headers = {
                 'Authorization': f'token {token}',
                 'Accept': 'application/vnd.github.v3+json'
@@ -299,13 +328,16 @@ class MediaTracker:
     def upload_to_github(self, file_paths):
         """Upload files to GitHub repository"""
         try:
+            owner = self.config.get('github_owner', '')
             repo = self.config.get('github_repo', '')
             token = self.config.get('github_token', '')
             branch = self.config.get('github_branch', 'main')
             
-            if not repo or not token:
-                logging.error("GitHub repository or token not configured")
+            if not owner or not repo or not token:
+                logging.error("GitHub owner, repository, or token not configured")
                 return False
+            
+            full_repo = f"{owner}/{repo}"
             
             headers = {
                 'Authorization': f'token {token}',
@@ -327,7 +359,7 @@ class MediaTracker:
                 filename = os.path.basename(file_path)
                 
                 # Check if file already exists to get SHA
-                check_url = f"https://api.github.com/repos/{repo}/contents/{filename}"
+                check_url = f"https://api.github.com/repos/{full_repo}/contents/{filename}"
                 check_params = {'ref': branch}
                 check_response = self.session.get(check_url, headers=headers, params=check_params, timeout=30)
                 
@@ -344,7 +376,7 @@ class MediaTracker:
                     commit_data['sha'] = existing_file['sha']
                 
                 # Upload/update the file
-                upload_url = f"https://api.github.com/repos/{repo}/contents/{filename}"
+                upload_url = f"https://api.github.com/repos/{full_repo}/contents/{filename}"
                 response = self.session.put(upload_url, headers=headers, json=commit_data, timeout=30)
                 
                 if response.status_code in [200, 201]:
@@ -364,14 +396,25 @@ class MediaTracker:
         tv_shows = []
         
         try:
+            plex_url = self.config.get('plex_url', '').strip()
+            plex_token = self.config.get('plex_token', '').strip()
+            
+            if not plex_url or not plex_token:
+                logging.error("Plex URL or token not configured")
+                return movies, tv_shows
+            
+            # Ensure URL has protocol
+            if not plex_url.startswith(('http://', 'https://')):
+                plex_url = 'http://' + plex_url
+            
             # Calculate date range
             end_date = datetime.now()
             start_date = end_date - timedelta(days=days)
             start_timestamp = int(start_date.timestamp())
             
             # Get recently added content
-            url = urljoin(self.config['plex_url'], '/library/recentlyAdded')
-            headers = {'X-Plex-Token': self.config['plex_token']}
+            url = urljoin(plex_url, '/library/recentlyAdded')
+            headers = {'X-Plex-Token': plex_token}
             params = {'X-Plex-Container-Start': '0', 'X-Plex-Container-Size': '100'}
             
             response = self.session.get(url, headers=headers, params=params)
@@ -432,18 +475,170 @@ class MediaTracker:
         
         return movies, tv_shows
     
+    def get_plex_all_content(self):
+        """Get all movies and TV shows from Plex library"""
+        movies = []
+        tv_shows = []
+        
+        try:
+            plex_url = self.config.get('plex_url', '').strip()
+            plex_token = self.config.get('plex_token', '').strip()
+            
+            if not plex_url or not plex_token:
+                logging.error("Plex URL or token not configured")
+                return movies, tv_shows
+            
+            # Ensure URL has protocol
+            if not plex_url.startswith(('http://', 'https://')):
+                plex_url = 'http://' + plex_url
+            
+            # Get all libraries
+            url = urljoin(plex_url, '/library/sections')
+            headers = {'X-Plex-Token': plex_token}
+            
+            response = self.session.get(url, headers=headers)
+            response.raise_for_status()
+            
+            # Parse XML response (Plex returns XML)
+            import xml.etree.ElementTree as ET
+            root = ET.fromstring(response.content)
+            
+            # Helper function to get full artwork URL
+            def get_artwork_url(thumb_path):
+                if not thumb_path:
+                    return None
+                if thumb_path.startswith('http'):
+                    return thumb_path
+                return urljoin(plex_url, f'{thumb_path}?X-Plex-Token={plex_token}')
+            
+            # Iterate through each library section
+            for section in root.findall('.//Directory'):
+                section_type = section.get('type')
+                section_key = section.get('key')
+                section_title = section.get('title', 'Unknown')
+                
+                if section_type == 'movie':
+                    # Get all movies from this section
+                    section_url = urljoin(plex_url, f'/library/sections/{section_key}/all')
+                    section_response = self.session.get(section_url, headers=headers)
+                    section_response.raise_for_status()
+                    
+                    section_root = ET.fromstring(section_response.content)
+                    for item in section_root.findall('.//Video'):
+                        thumb = item.get('thumb', '')
+                        art = item.get('art', '')
+                        
+                        content_item = {
+                            'title': item.get('title', 'Unknown'),
+                            'year': item.get('year', 'Unknown'),
+                            'rating': item.get('rating', 'Not Rated'),
+                            'duration': int(item.get('duration', 0)) if item.get('duration') else 0,
+                            'duration_formatted': self._format_duration(int(item.get('duration', 0)) if item.get('duration') else 0),
+                            'summary': item.get('summary', ''),
+                            'added_date': datetime.fromtimestamp(int(item.get('addedAt', 0))).strftime('%Y-%m-%d') if item.get('addedAt') else 'Unknown',
+                            'studio': item.get('studio', ''),
+                            'content_rating': item.get('contentRating', ''),
+                            'thumb': get_artwork_url(thumb),
+                            'art': get_artwork_url(art),
+                            'genres': [genre.get('tag', '') for genre in item.findall('.//Genre')],
+                            'plex_key': item.get('key', ''),
+                            'guid': item.get('guid', ''),
+                            'director': [director.get('tag', '') for director in item.findall('.//Director')],
+                            'writers': [writer.get('tag', '') for writer in item.findall('.//Writer')],
+                            'actors': [{'name': actor.get('tag', ''), 'role': actor.get('role', '')} for actor in item.findall('.//Role')[:10]],
+                            'country': [country.get('tag', '') for country in item.findall('.//Country')],
+                            'tagline': item.get('tagline', ''),
+                            'originally_available_at': item.get('originallyAvailableAt', '')
+                        }
+                        movies.append(content_item)
+                
+                elif section_type == 'show':
+                    # For TV shows, we need to use the correct endpoint
+                    section_url = urljoin(plex_url, f'/library/sections/{section_key}/all')
+                    section_response = self.session.get(section_url, headers=headers)
+                    section_response.raise_for_status()
+                    
+                    section_root = ET.fromstring(section_response.content)
+                    for show in section_root.findall('.//Directory'):
+                        # Get the show's rating key for detailed info
+                        rating_key = show.get('ratingKey')
+                        if rating_key:
+                            # Get detailed show info using the rating key
+                            show_url = urljoin(plex_url, f'/library/metadata/{rating_key}')
+                            show_response = self.session.get(show_url, headers=headers)
+                            show_response.raise_for_status()
+                            
+                            show_root = ET.fromstring(show_response.content)
+                            show_item = show_root.find('.//Directory')
+                            
+                            if show_item is not None:
+                                thumb = show_item.get('thumb', '')
+                                art = show_item.get('art', '')
+                                
+                                # Get season count
+                                seasons_url = urljoin(plex_url, f'/library/metadata/{rating_key}/children')
+                                seasons_response = self.session.get(seasons_url, headers=headers)
+                                seasons_response.raise_for_status()
+                                seasons_root = ET.fromstring(seasons_response.content)
+                                season_count = len(seasons_root.findall('.//Directory'))
+                                
+                                # Get episode count
+                                episodes_url = urljoin(plex_url, f'/library/metadata/{rating_key}/allLeaves')
+                                episodes_response = self.session.get(episodes_url, headers=headers)
+                                episodes_response.raise_for_status()
+                                episodes_root = ET.fromstring(episodes_response.content)
+                                episode_count = len(episodes_root.findall('.//Video'))
+                                
+                                content_item = {
+                                    'title': show_item.get('title', 'Unknown'),
+                                    'year': show_item.get('year', 'Unknown'),
+                                    'rating': show_item.get('rating', 'Not Rated'),
+                                    'summary': show_item.get('summary', ''),
+                                    'added_date': datetime.fromtimestamp(int(show_item.get('addedAt', 0))).strftime('%Y-%m-%d') if show_item.get('addedAt') else 'Unknown',
+                                    'studio': show_item.get('studio', ''),
+                                    'content_rating': show_item.get('contentRating', ''),
+                                    'thumb': get_artwork_url(thumb),
+                                    'art': get_artwork_url(art),
+                                    'genres': [genre.get('tag', '') for genre in show_item.findall('.//Genre')],
+                                    'plex_key': show_item.get('key', ''),
+                                    'guid': show_item.get('guid', ''),
+                                    'episode_count': episode_count,
+                                    'season_count': season_count,
+                                    'originally_available_at': show_item.get('originallyAvailableAt', ''),
+                                    'network': show_item.get('network', ''),
+                                    'status': show_item.get('status', '')
+                                }
+                                tv_shows.append(content_item)
+            
+        except Exception as e:
+            logging.error(f"Error getting all Plex content: {str(e)}")
+            logging.exception("Full traceback:")
+        
+        return movies, tv_shows
+    
     def get_sonarr_calendar_extended(self, days=7):
         """Get TV shows from Sonarr calendar for the next N days with extended metadata"""
         scheduled_shows = []
         
         try:
+            sonarr_url = self.config.get('sonarr_url', '').strip()
+            sonarr_api_key = self.config.get('sonarr_api_key', '').strip()
+            
+            if not sonarr_url or not sonarr_api_key:
+                logging.error("Sonarr URL or API key not configured")
+                return scheduled_shows
+            
+            # Ensure URL has protocol
+            if not sonarr_url.startswith(('http://', 'https://')):
+                sonarr_url = 'http://' + sonarr_url
+            
             # Get date range
             start_date = datetime.now().strftime('%Y-%m-%d')
             end_date = (datetime.now() + timedelta(days=days)).strftime('%Y-%m-%d')
             
             # Get calendar data
-            url = urljoin(self.config['sonarr_url'], '/api/v3/calendar')
-            headers = {'X-Api-Key': self.config['sonarr_api_key']}
+            url = urljoin(sonarr_url, '/api/v3/calendar')
+            headers = {'X-Api-Key': sonarr_api_key}
             params = {'start': start_date, 'end': end_date}
             
             response = self.session.get(url, headers=headers, params=params)
@@ -452,7 +647,7 @@ class MediaTracker:
             episodes = response.json()
             
             # Get series data for additional metadata
-            series_url = urljoin(self.config['sonarr_url'], '/api/v3/series')
+            series_url = urljoin(sonarr_url, '/api/v3/series')
             series_response = self.session.get(series_url, headers=headers)
             series_response.raise_for_status()
             series_data = series_response.json()
@@ -501,7 +696,7 @@ class MediaTracker:
         return scheduled_shows
     
     def get_plex_library_stats(self):
-        """Get comprehensive Plex library statistics"""
+        """Get comprehensive Plex library statistics (reuse logic from get_plex_all_content)"""
         stats = {
             'libraries': [],
             'total_movies': 0,
@@ -511,77 +706,257 @@ class MediaTracker:
         }
         
         try:
-            # Get library sections
-            url = urljoin(self.config['plex_url'], '/library/sections')
-            headers = {'X-Plex-Token': self.config['plex_token']}
+            plex_url = self.config.get('plex_url', '').strip()
+            plex_token = self.config.get('plex_token', '').strip()
+            
+            if not plex_url or not plex_token:
+                logging.error("Plex URL or token not configured")
+                return stats
+            
+            # Ensure URL has protocol
+            if not plex_url.startswith(('http://', 'https://')):
+                plex_url = 'http://' + plex_url
+            
+            # Get all libraries
+            url = urljoin(plex_url, '/library/sections')
+            headers = {'X-Plex-Token': plex_token}
             
             response = self.session.get(url, headers=headers)
             response.raise_for_status()
             
-            data = response.json()
+            import xml.etree.ElementTree as ET
+            root = ET.fromstring(response.content)
             
-            if 'MediaContainer' in data and 'Directory' in data['MediaContainer']:
-                for library in data['MediaContainer']['Directory']:
-                    library_info = {
-                        'key': library.get('key', ''),
-                        'title': library.get('title', ''),
-                        'type': library.get('type', ''),
-                        'count': 0,
-                        'size': 0
-                    }
-                    
-                    # Get library contents count
-                    lib_url = urljoin(self.config['plex_url'], f'/library/sections/{library.get("key")}/all')
-                    lib_response = self.session.get(lib_url, headers=headers, params={'X-Plex-Container-Size': '0'})
-                    
-                    if lib_response.status_code == 200:
-                        lib_data = lib_response.json()
-                        if 'MediaContainer' in lib_data:
-                            library_info['count'] = lib_data['MediaContainer'].get('totalSize', 0)
-                    
-                    stats['libraries'].append(library_info)
-                    
-                    # Update totals
-                    if library.get('type') == 'movie':
-                        stats['total_movies'] += library_info['count']
-                    elif library.get('type') == 'show':
-                        stats['total_shows'] += library_info['count']
-                    elif library.get('type') == 'artist':
-                        stats['total_music'] += library_info['count']
-        
+            for section in root.findall('.//Directory'):
+                section_type = section.get('type')
+                section_key = section.get('key')
+                section_title = section.get('title', 'Unknown')
+                library_info = {
+                    'key': section_key,
+                    'title': section_title,
+                    'type': section_type,
+                    'count': 0
+                }
+                if section_type == 'movie':
+                    section_url = urljoin(plex_url, f'/library/sections/{section_key}/all')
+                    section_response = self.session.get(section_url, headers=headers)
+                    section_response.raise_for_status()
+                    section_root = ET.fromstring(section_response.content)
+                    count = len(section_root.findall('.//Video'))
+                    stats['total_movies'] += count
+                    library_info['count'] = count
+                elif section_type == 'show':
+                    section_url = urljoin(plex_url, f'/library/sections/{section_key}/all')
+                    section_response = self.session.get(section_url, headers=headers)
+                    section_response.raise_for_status()
+                    section_root = ET.fromstring(section_response.content)
+                    shows = [d for d in section_root.findall('.//Directory') if d.get('type') == 'show']
+                    count = len(shows)
+                    stats['total_shows'] += count
+                    library_info['count'] = count
+                    # Count episodes for each show
+                    for show in shows:
+                        show_key = show.get('ratingKey')
+                        if show_key:
+                            episodes_url = urljoin(plex_url, f'/library/metadata/{show_key}/allLeaves')
+                            episodes_response = self.session.get(episodes_url, headers=headers)
+                            episodes_response.raise_for_status()
+                            episodes_root = ET.fromstring(episodes_response.content)
+                            episode_count = len(episodes_root.findall('.//Video'))
+                            stats['total_episodes'] += episode_count
+                elif section_type == 'artist':
+                    section_url = urljoin(plex_url, f'/library/sections/{section_key}/all')
+                    section_response = self.session.get(section_url, headers=headers)
+                    section_response.raise_for_status()
+                    section_root = ET.fromstring(section_response.content)
+                    count = len(section_root.findall('.//Directory'))
+                    stats['total_music'] += count
+                    library_info['count'] = count
+                else:
+                    library_info['count'] = 0
+                stats['libraries'].append(library_info)
+            return stats
         except Exception as e:
             logging.error(f"Error getting Plex library stats: {str(e)}")
-        
-        return stats
+            logging.exception("Full traceback:")
+            return stats
 
     def run_daily_sync(self):
         """Run the complete daily sync process"""
         try:
             logging.info("Starting daily sync...")
             
-            # Test connections first
-            if not self.test_plex_connection():
-                return {'success': False, 'error': 'Plex connection failed'}
+            # Get data from APIs with error handling
+            try:
+                movies, tv_shows = self.get_plex_recent_content()
+            except Exception as e:
+                logging.warning(f"Plex data retrieval failed: {str(e)}")
+                movies, tv_shows = [], []
             
-            if not self.test_sonarr_connection():
-                return {'success': False, 'error': 'Sonarr connection failed'}
+            try:
+                scheduled_shows = self.get_sonarr_today_schedule()
+            except Exception as e:
+                logging.warning(f"Sonarr data retrieval failed: {str(e)}")
+                scheduled_shows = []
             
-            # Get data from APIs (keeping original methods for text file output)
-            movies, tv_shows = self.get_plex_recent_content()
-            scheduled_shows = self.get_sonarr_today_schedule()
+            # Debug logging
+            logging.info(f"Daily sync found: {len(movies)} movies, {len(tv_shows)} TV shows, {len(scheduled_shows)} scheduled shows")
+            if scheduled_shows:
+                logging.info(f"Scheduled shows data: {scheduled_shows}")
             
-            # Write to files
-            if self.write_to_files(movies, tv_shows, scheduled_shows):
+            # Always write to files locally first
+            file_success = self.write_to_files(movies, tv_shows, scheduled_shows)
+            
+            result = {
+                'success': file_success,
+                'movies_count': len(movies),
+                'shows_count': len(tv_shows),
+                'scheduled_count': len(scheduled_shows),
+                'files_written': file_success
+            }
+            
+            # Try to upload to GitHub if enabled and configured
+            if file_success and self.config.get('github_enabled', False):
+                try:
+                    # Get the file paths that were written
+                    output_dir = self.config.get('output_directory', './output')
+                    file_paths = []
+                    
+                    # Add files based on what was written
+                    if len(movies) > 0:
+                        file_paths.append(f"{output_dir}/movies_today.txt")
+                    if len(tv_shows) > 0:
+                        file_paths.append(f"{output_dir}/tv_shows_today.txt")
+                    if len(scheduled_shows) > 0:
+                        file_paths.append(f"{output_dir}/tv_schedule_today.txt")
+                    
+                    if file_paths and self.upload_to_github(file_paths):
+                        result['github_uploaded'] = True
+                        logging.info("Files uploaded to GitHub successfully")
+                    else:
+                        result['github_uploaded'] = False
+                        logging.warning("GitHub upload failed, but files saved locally")
+                except Exception as e:
+                    result['github_uploaded'] = False
+                    logging.warning(f"GitHub upload failed: {str(e)}, but files saved locally")
+            else:
+                result['github_uploaded'] = False
+            
+            if file_success:
                 logging.info("Daily sync completed successfully")
-                return {
-                    'success': True,
-                    'movies_count': len(movies),
-                    'shows_count': len(tv_shows),
-                    'scheduled_count': len(scheduled_shows)
-                }
+                return result
             else:
                 return {'success': False, 'error': 'Failed to write output files'}
                 
         except Exception as e:
             logging.error(f"Daily sync failed: {str(e)}")
             return {'success': False, 'error': str(e)}
+
+    def get_dashboard_content(self, dashboard_config=None):
+        """Get movies and TV shows for the dashboard with configurable date range"""
+        movies = []
+        tv_shows = []
+        
+        try:
+            # Use provided dashboard config or fall back to main config
+            config = dashboard_config or self.config
+            plex_url = config.get('plex_url', '').strip()
+            plex_token = config.get('plex_token', '').strip()
+            
+            if not plex_url or not plex_token:
+                logging.error("Plex URL or token not configured")
+                return movies, tv_shows
+            
+            # Ensure URL has protocol
+            if not plex_url.startswith(('http://', 'https://')):
+                plex_url = 'http://' + plex_url
+            
+            # Get date range from config
+            days = config.get('dashboard_days', 3650)  # Default to showing all content
+            max_items = config.get('dashboard_max_items', 100)  # Default to 100 items
+            
+            # Calculate date range
+            end_date = datetime.now()
+            start_date = end_date - timedelta(days=days)
+            start_timestamp = int(start_date.timestamp())
+            
+            # Get recently added content
+            url = urljoin(plex_url, '/library/recentlyAdded')
+            headers = {'X-Plex-Token': plex_token}
+            params = {
+                'X-Plex-Container-Start': '0',
+                'X-Plex-Container-Size': str(max_items)
+            }
+            
+            response = self.session.get(url, headers=headers, params=params)
+            response.raise_for_status()
+            
+            data = response.json()
+            
+            if 'MediaContainer' in data and 'Metadata' in data['MediaContainer']:
+                for item in data['MediaContainer']['Metadata']:
+                    added_at = item.get('addedAt', 0)
+                    
+                    if int(added_at) >= start_timestamp:
+                        # Enhanced metadata extraction
+                        base_item = {
+                            'title': item.get('title', 'Unknown'),
+                            'year': item.get('year', 'Unknown'),
+                            'added_date': datetime.fromtimestamp(int(added_at)).strftime('%Y-%m-%d'),
+                            'added_timestamp': int(added_at),
+                            'rating': item.get('rating', 'Not Rated'),
+                            'summary': item.get('summary', ''),
+                            'duration': item.get('duration', 0),
+                            'duration_formatted': self._format_duration(item.get('duration', 0)),
+                            'thumb': item.get('thumb', ''),
+                            'art': item.get('art', ''),
+                            'genres': [genre.get('tag', '') for genre in item.get('Genre', [])],
+                            'studio': item.get('studio', ''),
+                            'content_rating': item.get('contentRating', ''),
+                            'plex_key': item.get('key', ''),
+                            'guid': item.get('guid', '')
+                        }
+                        
+                        if item.get('type') == 'movie':
+                            # Movie-specific fields
+                            movie_item = base_item.copy()
+                            movie_item.update({
+                                'director': [director.get('tag', '') for director in item.get('Director', [])],
+                                'writers': [writer.get('tag', '') for writer in item.get('Writer', [])],
+                                'actors': [{'name': actor.get('tag', ''), 'role': actor.get('role', '')} for actor in item.get('Role', [])[:10]],  # Limit to top 10
+                                'country': [country.get('tag', '') for country in item.get('Country', [])],
+                                'tagline': item.get('tagline', ''),
+                                'originally_available_at': item.get('originallyAvailableAt', '')
+                            })
+                            movies.append(movie_item)
+                            
+                        elif item.get('type') == 'show':
+                            # TV Show-specific fields
+                            tv_item = base_item.copy()
+                            tv_item.update({
+                                'episode_count': item.get('leafCount', 0),
+                                'season_count': item.get('childCount', 0),
+                                'originally_available_at': item.get('originallyAvailableAt', ''),
+                                'network': item.get('network', ''),
+                                'status': item.get('status', '')
+                            })
+                            tv_shows.append(tv_item)
+        
+        except Exception as e:
+            logging.error(f"Error getting dashboard content: {str(e)}")
+        
+        return movies, tv_shows
+
+    def _format_duration(self, duration_ms):
+        """Format duration in milliseconds to human-readable format"""
+        if not duration_ms:
+            return 'Unknown'
+        
+        seconds = duration_ms // 1000
+        hours = seconds // 3600
+        minutes = (seconds % 3600) // 60
+        
+        if hours > 0:
+            return f"{hours}h {minutes}m"
+        else:
+            return f"{minutes}m"

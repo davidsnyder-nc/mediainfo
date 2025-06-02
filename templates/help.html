@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help & Documentation - Media Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+        }
+        .card-header {
+            background-color: #fff;
+            border-bottom: 1px solid #e9ecef;
+            border-radius: 12px 12px 0 0 !important;
+            padding: 1rem 1.5rem;
+        }
+        .toc {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            position: sticky;
+            top: 20px;
+        }
+        .toc a {
+            color: #6c757d;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .toc a:hover {
+            color: #495057;
+        }
+        .section-anchor {
+            padding-top: 70px;
+            margin-top: -70px;
+        }
+        pre {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 1rem;
+            font-size: 0.875rem;
+        }
+        .alert {
+            border-radius: 8px;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="/">
+                <i class="bi bi-collection-play me-2"></i>Media Tracker
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a href="/" class="nav-link">
+                    <i class="bi bi-gear me-1"></i>Configuration
+                </a>
+                <a href="/api_keys" class="nav-link">
+                    <i class="bi bi-key me-1"></i>API Keys
+                </a>
+                <a href="/help" class="nav-link">
+                    <i class="bi bi-question-circle me-1"></i>Help
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <div class="row">
+            <!-- Table of Contents -->
+            <div class="col-lg-3">
+                <div class="toc">
+                    <h6 class="fw-bold text-dark mb-3">Table of Contents</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#overview">Overview</a></li>
+                        <li><a href="#getting-started">Getting Started</a></li>
+                        <li><a href="#services">Service Configuration</a>
+                            <ul class="list-unstyled ms-3">
+                                <li><a href="#plex-setup">Plex Setup</a></li>
+                                <li><a href="#sonarr-setup">Sonarr Setup</a></li>
+                                <li><a href="#github-setup">GitHub Setup</a></li>
+                            </ul>
+                        </li>
+                        <li><a href="#text-reports">Text Reports</a></li>
+                        <li><a href="#scheduling">Scheduling</a></li>
+                        <li><a href="#dashboard">Dashboard</a></li>
+                        <li><a href="#api-access">API Access</a></li>
+                        <li><a href="#troubleshooting">Troubleshooting</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-lg-9">
+                <!-- Overview -->
+                <div id="overview" class="section-anchor">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="mb-0"><i class="bi bi-info-circle me-2"></i>Overview</h4>
+                        </div>
+                        <div class="card-body">
+                            <p>Media Tracker is a comprehensive tool that connects to your Plex media server and Sonarr TV management system to generate automated reports about your media library and upcoming TV schedule.</p>
+                            
+                            <h6>Key Features:</h6>
+                            <ul>
+                                <li><strong>Automated Reports:</strong> Generate customizable text files with your media data</li>
+                                <li><strong>Multi-Service Integration:</strong> Connect to Plex, Sonarr, and GitHub</li>
+                                <li><strong>Flexible Scheduling:</strong> Daily or interval-based automated sync</li>
+                                <li><strong>Interactive Dashboard:</strong> View your media library with real-time data</li>
+                                <li><strong>API Access:</strong> Secure API endpoints for external applications</li>
+                                <li><strong>Custom Formatting:</strong> Personalize your report templates</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Getting Started -->
+                <div id="getting-started" class="section-anchor">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="mb-0"><i class="bi bi-play-circle me-2"></i>Getting Started</h4>
+                        </div>
+                        <div class="card-body">
+                            <ol>
+                                <li><strong>Configure Services:</strong> Set up connections to your Plex and Sonarr servers</li>
+                                <li><strong>Test Connections:</strong> Verify that all services are accessible</li>
+                                <li><strong>Customize Reports:</strong> Configure text format and output settings</li>
+                                <li><strong>Set Up Scheduling:</strong> Enable automated daily sync if desired</li>
+                                <li><strong>Optional:</strong> Configure GitHub integration for automatic file uploads</li>
+                            </ol>
+                            
+                            <div class="alert alert-info">
+                                <i class="bi bi-lightbulb me-2"></i>
+                                <strong>Quick Start:</strong> You can run a manual sync immediately after configuring your services to test the system.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service Configuration -->
+                <div id="services" class="section-anchor">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="mb-0"><i class="bi bi-gear me-2"></i>Service Configuration</h4>
+                        </div>
+                        <div class="card-body">
+                            <!-- Plex Setup -->
+                            <div id="plex-setup">
+                                <h5><i class="bi bi-film me-2"></i>Plex Media Server</h5>
+                                <p>Connect to your Plex server to retrieve movies and TV show information.</p>
+                                
+                                <h6>Required Information:</h6>
+                                <ul>
+                                    <li><strong>Plex URL:</strong> Your server address (e.g., http://192.168.1.100:32400)</li>
+                                    <li><strong>Plex Token:</strong> Authentication token for API access</li>
+                                </ul>
+                                
+                                <h6>Getting Your Plex Token:</h6>
+                                <ol>
+                                    <li>Open Plex Web App in your browser</li>
+                                    <li>Open browser developer tools (F12)</li>
+                                    <li>Go to Network tab and reload the page</li>
+                                    <li>Look for requests with "X-Plex-Token" in the headers</li>
+                                    <li>Copy the token value (long alphanumeric string)</li>
+                                </ol>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <!-- Sonarr Setup -->
+                            <div id="sonarr-setup">
+                                <h5><i class="bi bi-tv me-2"></i>Sonarr TV Management</h5>
+                                <p>Connect to Sonarr to get TV show schedule and episode information.</p>
+                                
+                                <h6>Required Information:</h6>
+                                <ul>
+                                    <li><strong>Sonarr URL:</strong> Your Sonarr instance address (e.g., http://192.168.1.100:8989)</li>
+                                    <li><strong>API Key:</strong> Sonarr API key for authentication</li>
+                                </ul>
+                                
+                                <h6>Finding Your Sonarr API Key:</h6>
+                                <ol>
+                                    <li>Open Sonarr web interface</li>
+                                    <li>Go to Settings → General</li>
+                                    <li>Find the "API Key" field</li>
+                                    <li>Copy the API key value</li>
+                                </ol>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <!-- GitHub Setup -->
+                            <div id="github-setup">
+                                <h5><i class="bi bi-github me-2"></i>GitHub Integration (Optional)</h5>
+                                <p>Automatically upload generated reports to a GitHub repository.</p>
+                                
+                                <h6>Required Information:</h6>
+                                <ul>
+                                    <li><strong>GitHub Token:</strong> Personal access token with repository permissions</li>
+                                    <li><strong>Repository:</strong> Username/repository-name format</li>
+                                </ul>
+                                
+                                <h6>Creating a GitHub Token:</h6>
+                                <ol>
+                                    <li>Go to GitHub Settings → Developer settings → Personal access tokens</li>
+                                    <li>Generate new token (classic)</li>
+                                    <li>Select "repo" permissions</li>
+                                    <li>Copy the generated token</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Text Reports -->
+                <div id="text-reports" class="section-anchor">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="mb-0"><i class="bi bi-file-text me-2"></i>Text Reports</h4>
+                        </div>
+                        <div class="card-body">
+                            <p>Customize how your media data is formatted in generated text files.</p>
+                            
+                            <h6>Report Sections:</h6>
+                            <ul>
+                                <li><strong>Plex Movies:</strong> Recently added movies from your library</li>
+                                <li><strong>Plex TV Shows:</strong> Recently added TV series</li>
+                                <li><strong>TV Schedule:</strong> Upcoming episodes from Sonarr</li>
+                            </ul>
+                            
+                            <h6>Format Variables:</h6>
+                            <p>Use these variables in your custom formats:</p>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Movies/TV Shows:</strong>
+                                    <ul class="small">
+                                        <li><code>{title}</code> - Title</li>
+                                        <li><code>{year}</code> - Release year</li>
+                                        <li><code>{added_date}</code> - Date added</li>
+                                        <li><code>{separator}</code> - Section separator</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>TV Schedule:</strong>
+                                    <ul class="small">
+                                        <li><code>{series_title}</code> - Show name</li>
+                                        <li><code>{season}</code> - Season number</li>
+                                        <li><code>{episode}</code> - Episode number</li>
+                                        <li><code>{episode_title}</code> - Episode title</li>
+                                        <li><code>{air_date}</code> - Air date</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <h6>File Naming Options:</h6>
+                            <ul>
+                                <li><strong>Date Suffix:</strong> media_tracker_2024-01-15.txt</li>
+                                <li><strong>Date Prefix:</strong> 2024-01-15_media_tracker.txt</li>
+                                <li><strong>Custom:</strong> Your specified filename</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scheduling -->
+                <div id="scheduling" class="section-anchor">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="mb-0"><i class="bi bi-clock me-2"></i>Scheduling</h4>
+                        </div>
+                        <div class="card-body">
+                            <p>Configure automated report generation on a schedule.</p>
+                            
+                            <h6>Schedule Types:</h6>
+                            <ul>
+                                <li><strong>Daily:</strong> Run once per day at specified time (uses Eastern US timezone)</li>
+                                <li><strong>Interval:</strong> Run every X hours</li>
+                                <li><strong>Manual:</strong> Only run when triggered manually</li>
+                            </ul>
+                            
+                            <h6>What Happens During Sync:</h6>
+                            <ol>
+                                <li>Connect to configured services</li>
+                                <li>Retrieve recent media and schedule data</li>
+                                <li>Generate text files using your format templates</li>
+                                <li>Save files to output directory</li>
+                                <li>Upload to GitHub (if configured)</li>
+                            </ol>
+                            
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                <strong>Note:</strong> All scheduling operates in Eastern US timezone as configured.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard -->
+                <div id="dashboard" class="section-anchor">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="mb-0"><i class="bi bi-speedometer2 me-2"></i>Dashboard</h4>
+                        </div>
+                        <div class="card-body">
+                            <p>The interactive dashboard provides real-time access to your media data.</p>
+                            
+                            <h6>Dashboard Features:</h6>
+                            <ul>
+                                <li><strong>System Status:</strong> Connection status of all services</li>
+                                <li><strong>Complete Library:</strong> All movies and TV shows from Plex (no time restrictions)</li>
+                                <li><strong>TV Schedule:</strong> Upcoming episodes with customizable timeframe (today/week/month)</li>
+                                <li><strong>Library Statistics:</strong> Overview of your media collection</li>
+                                <li><strong>Auto Refresh:</strong> Optional 5-minute auto-refresh</li>
+                            </ul>
+                            
+                            <h6>Dashboard Controls:</h6>
+                            <ul>
+                                <li><strong>Show Sections:</strong> Toggle visibility of different data sections</li>
+                                <li><strong>TV Schedule Range:</strong> Choose timeframe for upcoming episodes</li>
+                                <li><strong>Display Options:</strong> Extended info and auto-refresh settings</li>
+                            </ul>
+                            
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>Performance:</strong> Dashboard settings are saved locally in your browser.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- API Access -->
+                <div id="api-access" class="section-anchor">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="mb-0"><i class="bi bi-key me-2"></i>API Access</h4>
+                        </div>
+                        <div class="card-body">
+                            <p>Secure API endpoints allow external applications to access your media data.</p>
+                            
+                            <h6>API Key Management:</h6>
+                            <ul>
+                                <li>Create API keys with descriptive names</li>
+                                <li>Monitor usage statistics and last used dates</li>
+                                <li>Deactivate keys when no longer needed</li>
+                                <li>Each key provides full access to all API endpoints</li>
+                            </ul>
+                            
+                            <h6>Available Endpoints:</h6>
+                            <ul>
+                                <li><code>/api/status</code> - Service connection status</li>
+                                <li><code>/api/recent</code> - Recently added content</li>
+                                <li><code>/api/all_content</code> - Complete Plex library</li>
+                                <li><code>/api/schedule</code> - TV episode schedule</li>
+                                <li><code>/api/full_sync</code> - Combined data from all sources</li>
+                                <li><code>/api/library_stats</code> - Library statistics</li>
+                                <li><code>/api/config</code> - Current configuration (safe data only)</li>
+                            </ul>
+                            
+                            <h6>Authentication Methods:</h6>
+                            <pre>Header (Recommended):
+curl -H "X-API-Key: YOUR_API_KEY" https://your-domain.com/api/recent
+
+Query Parameter:
+curl "https://your-domain.com/api/recent?api_key=YOUR_API_KEY"</pre>
+                            
+                            <div class="alert alert-warning">
+                                <i class="bi bi-shield-exclamation me-2"></i>
+                                <strong>Security:</strong> Keep API keys secure and rotate them regularly. Deactivate any compromised keys immediately.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Troubleshooting -->
+                <div id="troubleshooting" class="section-anchor">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="mb-0"><i class="bi bi-tools me-2"></i>Troubleshooting</h4>
+                        </div>
+                        <div class="card-body">
+                            <h6>Common Issues:</h6>
+                            
+                            <div class="mb-4">
+                                <strong>Connection Failed</strong>
+                                <ul>
+                                    <li>Verify service URLs are correct and accessible</li>
+                                    <li>Check that API keys/tokens are valid</li>
+                                    <li>Ensure services are running and responsive</li>
+                                    <li>Check firewall settings and network connectivity</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <strong>No Data Retrieved</strong>
+                                <ul>
+                                    <li>Confirm your Plex library contains media</li>
+                                    <li>Check that Sonarr has shows configured with future episodes</li>
+                                    <li>Verify the timeframe settings match your expectations</li>
+                                    <li>Review the test connection results</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <strong>Files Not Generated</strong>
+                                <ul>
+                                    <li>Check output directory permissions</li>
+                                    <li>Verify at least one report section is enabled</li>
+                                    <li>Review the manual sync results for errors</li>
+                                    <li>Ensure file naming configuration is valid</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <strong>GitHub Upload Failed</strong>
+                                <ul>
+                                    <li>Verify GitHub token has repository write permissions</li>
+                                    <li>Check repository name format (username/repo-name)</li>
+                                    <li>Ensure repository exists and is accessible</li>
+                                    <li>Review GitHub token expiration date</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <strong>Dashboard Loading Issues</strong>
+                                <ul>
+                                    <li>Check browser console for JavaScript errors</li>
+                                    <li>Clear browser cache and refresh the page</li>
+                                    <li>Verify API key is valid if using external access</li>
+                                    <li>Ensure services are configured and accessible</li>
+                                </ul>
+                            </div>
+                            
+                            <h6>Getting Help:</h6>
+                            <ul>
+                                <li>Use the test connection feature to diagnose service issues</li>
+                                <li>Check the system status in the dashboard</li>
+                                <li>Review manual sync results for detailed error messages</li>
+                                <li>Monitor the application logs for additional debugging information</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        
+        // Highlight current section in TOC
+        window.addEventListener('scroll', function() {
+            const sections = document.querySelectorAll('.section-anchor');
+            const navLinks = document.querySelectorAll('.toc a');
+            
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (pageYOffset >= sectionTop - 100) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            navLinks.forEach(link => {
+                link.classList.remove('fw-bold');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('fw-bold');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

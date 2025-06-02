@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Media Tracker Dashboard</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <style>
@@ -63,6 +64,12 @@
                 <a href="/" class="nav-link">
                     <i class="bi bi-gear me-1"></i>Configuration
                 </a>
+                <a href="/api_keys" class="nav-link">
+                    <i class="bi bi-key me-1"></i>API Keys
+                </a>
+                <a href="/help" class="nav-link">
+                    <i class="bi bi-question-circle me-1"></i>Help
+                </a>
             </div>
         </div>
     </nav>
@@ -79,13 +86,11 @@
                     <div class="card-body">
                         <div class="row align-items-center">
                             <div class="col-md-3">
-                                <label for="daysRange" class="form-label">Time Range</label>
-                                <select class="form-select" id="daysRange">
-                                    <option value="1">Last 1 day</option>
-                                    <option value="3">Last 3 days</option>
-                                    <option value="7" selected>Last 7 days</option>
-                                    <option value="14">Last 14 days</option>
-                                    <option value="30">Last 30 days</option>
+                                <label for="scheduleRange" class="form-label">TV Schedule Range</label>
+                                <select class="form-select" id="scheduleRange">
+                                    <option value="1">Today</option>
+                                    <option value="7" selected>Next 7 days</option>
+                                    <option value="30">Next 30 days</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -251,7 +256,7 @@
         }
 
         function loadStatus() {
-            fetch('/api/status')
+            fetch('/internal/status')
                 .then(response => response.json())
                 .then(data => {
                     const statusHtml = `
@@ -304,24 +309,30 @@
         }
 
         function getDaysRange() {
-            return document.getElementById('daysRange').value;
+            return 7; // Default to 7 days for all content
         }
 
         function getShowExtendedInfo() {
-            return document.getElementById('showExtendedInfo').checked;
+            const element = document.getElementById('showExtendedInfo');
+            return element ? element.checked : false;
         }
 
         function loadRecentContent() {
             const days = getDaysRange();
-            fetch(`/api/full_sync?days=${days}`)
+            fetch(`/internal/all_content`)
                 .then(response => response.json())
                 .then(data => {
+                    console.log('Received data:', data);  // Debug log
                     if (data.success) {
                         // Display movies
-                        if (data.data.movies && data.data.movies.length > 0) {
-                            const moviesHtml = data.data.movies.map(movie => `
+                        if (data.movies && data.movies.length > 0) {
+                            console.log('Movies found:', data.movies.length);  // Debug log
+                            const moviesHtml = data.movies.map(movie => `
                                 <div class="col-lg-4 col-md-6 mb-3">
                                     <div class="card media-card h-100">
+                                        ${movie.thumb ? `
+                                            <img src="${movie.thumb}" class="card-img-top" alt="${movie.title}" style="height: 300px; object-fit: cover;">
+                                        ` : ''}
                                         <div class="card-body">
                                             <h6 class="card-title fw-bold">${movie.title} <span class="text-muted">(${movie.year})</span></h6>
                                             <p class="card-text text-muted small">${movie.summary ? movie.summary.substring(0, 120) + '...' : 'No summary available'}</p>
@@ -350,16 +361,20 @@
                             `).join('');
                             document.getElementById('moviesSection').innerHTML = '<div class="row">' + moviesHtml + '</div>';
                         } else {
-                            document.getElementById('moviesSection').innerHTML = '<div class="text-center text-muted"><i class="bi bi-film display-1"></i><p class="mt-2">No movies added today</p></div>';
+                            document.getElementById('moviesSection').innerHTML = '<div class="text-center text-muted"><i class="bi bi-film display-1"></i><p class="mt-2">No movies available</p></div>';
                         }
 
                         // Display TV shows
-                        if (data.data.tv_shows && data.data.tv_shows.length > 0) {
-                            const tvHtml = data.data.tv_shows.map(show => `
+                        if (data.tv_shows && data.tv_shows.length > 0) {
+                            console.log('TV shows found:', data.tv_shows.length);  // Debug log
+                            const tvHtml = data.tv_shows.map(show => `
                                 <div class="col-lg-4 col-md-6 mb-3">
                                     <div class="card media-card h-100">
+                                        ${show.thumb ? `
+                                            <img src="${show.thumb}" class="card-img-top" alt="${show.title}" style="height: 300px; object-fit: cover;">
+                                        ` : ''}
                                         <div class="card-body">
-                                            <h6 class="card-title fw-bold">${show.title}</h6>
+                                            <h6 class="card-title fw-bold">${show.title} <span class="text-muted">(${show.year})</span></h6>
                                             <p class="card-text text-muted small">${show.summary ? show.summary.substring(0, 120) + '...' : 'No summary available'}</p>
                                             <div class="row small">
                                                 <div class="col-6">
@@ -370,6 +385,12 @@
                                                 </div>
                                                 <div class="col-6">
                                                     <strong>Episodes:</strong> ${show.episode_count || '0'}
+                                                </div>
+                                                <div class="col-6">
+                                                    <strong>Network:</strong> ${show.network || 'Unknown'}
+                                                </div>
+                                                <div class="col-6">
+                                                    <strong>Status:</strong> ${show.status || 'Unknown'}
                                                 </div>
                                                 <div class="col-6">
                                                     <strong>Rating:</strong> ${show.rating || 'N/A'}
@@ -386,12 +407,33 @@
                             `).join('');
                             document.getElementById('tvShowsSection').innerHTML = '<div class="row">' + tvHtml + '</div>';
                         } else {
-                            document.getElementById('tvShowsSection').innerHTML = '<div class="text-center text-muted"><i class="bi bi-tv display-1"></i><p class="mt-2">No TV shows added today</p></div>';
+                            document.getElementById('tvShowsSection').innerHTML = '<div class="text-center text-muted"><i class="bi bi-tv display-1"></i><p class="mt-2">No TV shows available</p></div>';
                         }
 
-                        // Display schedule
-                        if (data.data.scheduled_shows && data.data.scheduled_shows.length > 0) {
-                            const scheduleHtml = data.data.scheduled_shows.map(show => `
+                        const timestamp = formatTimestamp();
+                        document.getElementById('moviesLastUpdated').textContent = `Updated: ${timestamp}`;
+                        document.getElementById('tvLastUpdated').textContent = `Updated: ${timestamp}`;
+                    } else {
+                        console.error('API returned error:', data.error);  // Debug log
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);  // Debug log
+                    document.getElementById('moviesSection').innerHTML = '<div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>Plex server configured but not accessible from this environment. Data available when running locally.</div>';
+                    document.getElementById('tvShowsSection').innerHTML = '<div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>Plex server configured but not accessible from this environment. Data available when running locally.</div>';
+                    
+                    const timestamp = formatTimestamp();
+                    document.getElementById('moviesLastUpdated').textContent = `Connection limited: ${timestamp}`;
+                    document.getElementById('tvLastUpdated').textContent = `Connection limited: ${timestamp}`;
+                });
+
+            // Load schedule data separately
+            fetch(`/internal/schedule?days=${days}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.scheduled_shows && data.scheduled_shows.length > 0) {
+                            const scheduleHtml = data.scheduled_shows.map(show => `
                                 <div class="col-lg-6 mb-3">
                                     <div class="card media-card">
                                         <div class="card-body">
@@ -406,22 +448,12 @@
                         } else {
                             document.getElementById('scheduleSection').innerHTML = '<div class="text-center text-muted"><i class="bi bi-calendar-event display-1"></i><p class="mt-2">No shows scheduled for today</p></div>';
                         }
-
-                        const timestamp = formatTimestamp();
-                        document.getElementById('moviesLastUpdated').textContent = `Updated: ${timestamp}`;
-                        document.getElementById('tvLastUpdated').textContent = `Updated: ${timestamp}`;
-                        document.getElementById('scheduleLastUpdated').textContent = `Updated: ${timestamp}`;
+                        document.getElementById('scheduleLastUpdated').textContent = `Updated: ${formatTimestamp()}`;
                     }
                 })
                 .catch(error => {
-                    document.getElementById('moviesSection').innerHTML = '<div class="alert alert-danger">Error loading movie data</div>';
-                    document.getElementById('tvShowsSection').innerHTML = '<div class="alert alert-danger">Error loading TV show data</div>';
-                    document.getElementById('scheduleSection').innerHTML = '<div class="alert alert-danger">Error loading schedule data</div>';
-                    
-                    const timestamp = formatTimestamp();
-                    document.getElementById('moviesLastUpdated').textContent = `Error: ${timestamp}`;
-                    document.getElementById('tvLastUpdated').textContent = `Error: ${timestamp}`;
-                    document.getElementById('scheduleLastUpdated').textContent = `Error: ${timestamp}`;
+                    document.getElementById('scheduleSection').innerHTML = '<div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>Schedule data not accessible from this environment. Data available when running locally.</div>';
+                    document.getElementById('scheduleLastUpdated').textContent = `Connection limited: ${formatTimestamp()}`;
                 });
         }
 
@@ -478,16 +510,32 @@
         }
         
         function saveDashboardSettings() {
-            const settings = {
-                daysRange: document.getElementById('daysRange').value,
-                showStatus: document.getElementById('showStatus').checked,
-                showMovies: document.getElementById('showMovies').checked,
-                showTVShows: document.getElementById('showTVShows').checked,
-                showSchedule: document.getElementById('showSchedule').checked,
-                showLibraryStats: document.getElementById('showLibraryStats').checked,
-                showExtendedInfo: document.getElementById('showExtendedInfo').checked,
-                autoRefresh: document.getElementById('autoRefresh').checked
-            };
+            const settings = {};
+            
+            const scheduleRange = document.getElementById('scheduleRange');
+            if (scheduleRange) settings.scheduleRange = scheduleRange.value;
+            
+            const showStatus = document.getElementById('showStatus');
+            if (showStatus) settings.showStatus = showStatus.checked;
+            
+            const showMovies = document.getElementById('showMovies');
+            if (showMovies) settings.showMovies = showMovies.checked;
+            
+            const showTVShows = document.getElementById('showTVShows');
+            if (showTVShows) settings.showTVShows = showTVShows.checked;
+            
+            const showSchedule = document.getElementById('showSchedule');
+            if (showSchedule) settings.showSchedule = showSchedule.checked;
+            
+            const showLibraryStats = document.getElementById('showLibraryStats');
+            if (showLibraryStats) settings.showLibraryStats = showLibraryStats.checked;
+            
+            const showExtendedInfo = document.getElementById('showExtendedInfo');
+            if (showExtendedInfo) settings.showExtendedInfo = showExtendedInfo.checked;
+            
+            const autoRefresh = document.getElementById('autoRefresh');
+            if (autoRefresh) settings.autoRefresh = autoRefresh.checked;
+            
             localStorage.setItem('dashboardSettings', JSON.stringify(settings));
         }
         
@@ -495,119 +543,33 @@
             const saved = localStorage.getItem('dashboardSettings');
             if (saved) {
                 const settings = JSON.parse(saved);
-                document.getElementById('daysRange').value = settings.daysRange || '7';
-                document.getElementById('showStatus').checked = settings.showStatus !== false;
-                document.getElementById('showMovies').checked = settings.showMovies !== false;
-                document.getElementById('showTVShows').checked = settings.showTVShows !== false;
-                document.getElementById('showSchedule').checked = settings.showSchedule !== false;
-                document.getElementById('showLibraryStats').checked = settings.showLibraryStats || false;
-                document.getElementById('showExtendedInfo').checked = settings.showExtendedInfo || false;
-                document.getElementById('autoRefresh').checked = settings.autoRefresh || false;
+                
+                const scheduleRange = document.getElementById('scheduleRange');
+                if (scheduleRange) scheduleRange.value = settings.scheduleRange || '7';
+                
+                const showStatus = document.getElementById('showStatus');
+                if (showStatus) showStatus.checked = settings.showStatus !== false;
+                
+                const showMovies = document.getElementById('showMovies');
+                if (showMovies) showMovies.checked = settings.showMovies !== false;
+                
+                const showTVShows = document.getElementById('showTVShows');
+                if (showTVShows) showTVShows.checked = settings.showTVShows !== false;
+                
+                const showSchedule = document.getElementById('showSchedule');
+                if (showSchedule) showSchedule.checked = settings.showSchedule !== false;
+                
+                const showLibraryStats = document.getElementById('showLibraryStats');
+                if (showLibraryStats) showLibraryStats.checked = settings.showLibraryStats || false;
+                
+                const showExtendedInfo = document.getElementById('showExtendedInfo');
+                if (showExtendedInfo) showExtendedInfo.checked = settings.showExtendedInfo || false;
+                
+                const autoRefresh = document.getElementById('autoRefresh');
+                if (autoRefresh) autoRefresh.checked = settings.autoRefresh || false;
             }
         }
         
-        function loadRecentContent() {
-            const days = getDaysRange();
-            fetch(`/api/full_sync?days=${days}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Display movies
-                        if (data.data.movies && data.data.movies.length > 0) {
-                            const moviesHtml = data.data.movies.map(movie => `
-                                <div class="col-lg-4 col-md-6 mb-3">
-                                    <div class="card media-card h-100">
-                                        <div class="card-body">
-                                            <h6 class="card-title fw-bold">${movie.title} <span class="text-muted">(${movie.year})</span></h6>
-                                            <p class="card-text text-muted small">${movie.summary ? movie.summary.substring(0, 120) + '...' : 'No summary available'}</p>
-                                            <div class="row small">
-                                                <div class="col-6">
-                                                    <strong>Added:</strong> ${movie.added_date}
-                                                </div>
-                                                <div class="col-6">
-                                                    <strong>Rating:</strong> ${movie.rating || 'N/A'}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            `).join('');
-                            document.getElementById('moviesSection').innerHTML = '<div class="row">' + moviesHtml + '</div>';
-                        } else {
-                            document.getElementById('moviesSection').innerHTML = '<div class="text-center text-muted"><i class="bi bi-film display-1"></i><p class="mt-2">No movies found for the selected time period</p></div>';
-                        }
-
-                        // Display TV shows
-                        if (data.data.tv_shows && data.data.tv_shows.length > 0) {
-                            const tvHtml = data.data.tv_shows.map(show => `
-                                <div class="col-lg-4 col-md-6 mb-3">
-                                    <div class="card media-card h-100">
-                                        <div class="card-body">
-                                            <h6 class="card-title fw-bold">${show.title} <span class="text-muted">(${show.year})</span></h6>
-                                            <p class="card-text text-muted small">${show.summary ? show.summary.substring(0, 120) + '...' : 'No summary available'}</p>
-                                            <div class="row small">
-                                                <div class="col-6">
-                                                    <strong>Added:</strong> ${show.added_date}
-                                                </div>
-                                                <div class="col-6">
-                                                    <strong>Episodes:</strong> ${show.episode_count || 'Unknown'}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            `).join('');
-                            document.getElementById('tvShowsSection').innerHTML = '<div class="row">' + tvHtml + '</div>';
-                        } else {
-                            document.getElementById('tvShowsSection').innerHTML = '<div class="text-center text-muted"><i class="bi bi-tv display-1"></i><p class="mt-2">No TV shows found for the selected time period</p></div>';
-                        }
-
-                        // Display schedule
-                        if (data.data.scheduled_shows && data.data.scheduled_shows.length > 0) {
-                            const scheduleHtml = data.data.scheduled_shows.map(show => `
-                                <div class="col-lg-4 col-md-6 mb-3">
-                                    <div class="card media-card h-100">
-                                        <div class="card-body">
-                                            <h6 class="card-title fw-bold">${show.series_title}</h6>
-                                            <p class="card-text">${show.episode_title}</p>
-                                            <div class="row small">
-                                                <div class="col-6">
-                                                    <strong>Season:</strong> ${show.season}
-                                                </div>
-                                                <div class="col-6">
-                                                    <strong>Episode:</strong> ${show.episode}
-                                                </div>
-                                                <div class="col-12">
-                                                    <strong>Air Date:</strong> ${show.air_date}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            `).join('');
-                            document.getElementById('scheduleSection').innerHTML = '<div class="row">' + scheduleHtml + '</div>';
-                        } else {
-                            document.getElementById('scheduleSection').innerHTML = '<div class="text-center text-muted"><i class="bi bi-calendar-event display-1"></i><p class="mt-2">No scheduled shows for the selected time period</p></div>';
-                        }
-
-                        // Update timestamps
-                        document.getElementById('moviesLastUpdated').textContent = `Updated: ${formatTimestamp()}`;
-                        document.getElementById('tvLastUpdated').textContent = `Updated: ${formatTimestamp()}`;
-                        document.getElementById('scheduleLastUpdated').textContent = `Updated: ${formatTimestamp()}`;
-                    } else {
-                        // Handle API errors gracefully
-                        document.getElementById('moviesSection').innerHTML = '<div class="alert alert-warning">Configure your Plex server in Services tab to see movie data</div>';
-                        document.getElementById('tvShowsSection').innerHTML = '<div class="alert alert-warning">Configure your Plex server in Services tab to see TV show data</div>';
-                        document.getElementById('scheduleSection').innerHTML = '<div class="alert alert-warning">Configure your Sonarr server in Services tab to see schedule data</div>';
-                    }
-                })
-                .catch(error => {
-                    document.getElementById('moviesSection').innerHTML = '<div class="alert alert-warning">Configure your services to see media data</div>';
-                    document.getElementById('tvShowsSection').innerHTML = '<div class="alert alert-warning">Configure your services to see media data</div>';
-                    document.getElementById('scheduleSection').innerHTML = '<div class="alert alert-warning">Configure your services to see media data</div>';
-                });
-        }
-
         function updateSectionVisibility() {
             // Status section
             const statusRow = document.getElementById('statusRow');
@@ -633,17 +595,18 @@
         function loadLibraryStats() {
             if (!document.getElementById('showLibraryStats').checked) return;
             
-            fetch('/api/library_stats')
+            fetch('/internal/library_stats')
                 .then(response => response.json())
                 .then(data => {
-                    if (data.success && data.library_stats) {
-                        const stats = data.library_stats;
+                    console.log('Library stats response:', data);  // Debug log
+                    if (data && data.stats) {
+                        const stats = data.stats;
                         const statsHtml = `
                             <div class="row">
                                 <div class="col-md-3 mb-3">
                                     <div class="card bg-primary text-white h-100">
                                         <div class="card-body text-center">
-                                            <h3 class="card-title">${stats.total_movies}</h3>
+                                            <h3 class="card-title">${stats.total_movies || 0}</h3>
                                             <p class="card-text">Total Movies</p>
                                         </div>
                                     </div>
@@ -651,33 +614,55 @@
                                 <div class="col-md-3 mb-3">
                                     <div class="card bg-success text-white h-100">
                                         <div class="card-body text-center">
-                                            <h3 class="card-title">${stats.total_shows}</h3>
+                                            <h3 class="card-title">${stats.total_shows || 0}</h3>
                                             <p class="card-text">Total TV Shows</p>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <div class="card h-100">
-                                        <div class="card-body">
-                                            <h6 class="card-title">Libraries</h6>
-                                            ${stats.libraries.map(lib => `
-                                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                                    <span><i class="bi bi-folder me-2"></i>${lib.title}</span>
-                                                    <span class="badge bg-secondary">${lib.count} items</span>
-                                                </div>
-                                            `).join('')}
+                                <div class="col-md-3 mb-3">
+                                    <div class="card bg-info text-white h-100">
+                                        <div class="card-body text-center">
+                                            <h3 class="card-title">${stats.total_episodes || 0}</h3>
+                                            <p class="card-text">Total Episodes</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="card bg-secondary text-white h-100">
+                                        <div class="card-body text-center">
+                                            <h3 class="card-title">${stats.libraries ? stats.libraries.length : 0}</h3>
+                                            <p class="card-text">Total Libraries</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                            ${stats.libraries && stats.libraries.length > 0 ? `
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <h6 class="card-title">Library Details</h6>
+                                                ${stats.libraries.map(lib => `
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <span><i class="bi bi-folder me-2"></i>${lib.title} (${lib.type})</span>
+                                                        <span class="badge bg-secondary">${lib.count} items</span>
+                                                    </div>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : ''}
                         `;
                         document.getElementById('libraryStatsSection').innerHTML = statsHtml;
                         document.getElementById('libraryStatsLastUpdated').textContent = `Updated: ${formatTimestamp()}`;
                     } else {
+                        console.error('Invalid library stats data:', data);  // Debug log
                         document.getElementById('libraryStatsSection').innerHTML = '<div class="alert alert-warning">Unable to load library statistics</div>';
                     }
                 })
                 .catch(error => {
+                    console.error('Error loading library stats:', error);  // Debug log
                     document.getElementById('libraryStatsSection').innerHTML = '<div class="alert alert-danger">Error loading library statistics</div>';
                 });
         }
@@ -716,10 +701,13 @@
             }
 
             // Auto-save settings when changed
-            document.getElementById('daysRange').addEventListener('change', function() {
-                saveDashboardSettings();
-                updateSectionVisibility();
-            });
+            const daysRangeEl = document.getElementById('daysRange');
+            if (daysRangeEl) {
+                daysRangeEl.addEventListener('change', function() {
+                    saveDashboardSettings();
+                    updateSectionVisibility();
+                });
+            }
             
             ['showStatus', 'showMovies', 'showTVShows', 'showSchedule', 'showLibraryStats', 'showExtendedInfo'].forEach(id => {
                 const element = document.getElementById(id);
