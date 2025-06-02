@@ -2,7 +2,7 @@ import os
 import logging
 import uuid
 import requests
-from flask import Flask, render_template, request, flash, redirect, url_for, session, jsonify
+from flask import Flask, render_template, request, flash, redirect, url_for, session, jsonify, Response
 from config import ConfigManager
 from media_tracker import MediaTracker
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -548,6 +548,305 @@ def api_config():
 def dashboard():
     """Sample dashboard that demonstrates API usage"""
     return render_template('dashboard.html')
+
+@app.route('/api/documentation/download')
+def download_api_documentation():
+    """Generate and download comprehensive API documentation"""
+    from datetime import datetime
+    import io
+    
+    # Generate comprehensive API documentation
+    doc_content = f"""MEDIA TRACKER API DOCUMENTATION
+=================================
+
+Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+Base URL: {request.url_root}
+
+OVERVIEW
+--------
+The Media Tracker API provides programmatic access to your Plex media library and Sonarr TV schedule data. All endpoints return JSON responses and support CORS for web applications.
+
+AUTHENTICATION
+--------------
+No authentication is currently required for API access. Ensure your Media Tracker instance is properly secured.
+
+ENDPOINTS
+---------
+
+1. GET /api/status
+   Description: Get current connection status of all configured services
+   Parameters: None
+   
+   Response Format:
+   {{
+     "plex": {{
+       "configured": boolean,
+       "connected": boolean
+     }},
+     "sonarr": {{
+       "configured": boolean,
+       "connected": boolean
+     }},
+     "github": {{
+       "configured": boolean,
+       "connected": boolean
+     }},
+     "scheduler": {{
+       "enabled": boolean,
+       "type": string,
+       "next_run": string (ISO format)
+     }}
+   }}
+
+2. GET /api/recent
+   Description: Get recently added movies and TV shows with extended metadata
+   Parameters: 
+     - days (optional): Number of days to look back (1-30, default: 7)
+   
+   Example: /api/recent?days=14
+   
+   Response Format:
+   {{
+     "success": boolean,
+     "movies": [
+       {{
+         "title": string,
+         "year": number,
+         "rating": string,
+         "summary": string,
+         "duration": number (milliseconds),
+         "genres": [string],
+         "directors": [string],
+         "actors": [string],
+         "poster_url": string,
+         "content_rating": string,
+         "added_date": string,
+         "library": string
+       }}
+     ],
+     "tv_shows": [
+       {{
+         "title": string,
+         "year": number,
+         "rating": string,
+         "summary": string,
+         "episode_count": number,
+         "genres": [string],
+         "actors": [string],
+         "poster_url": string,
+         "content_rating": string,
+         "added_date": string,
+         "library": string
+       }}
+     ],
+     "timestamp": string (ISO format),
+     "timezone": string
+   }}
+
+3. GET /api/schedule
+   Description: Get TV show schedule with extended metadata
+   Parameters:
+     - days (optional): Number of days to look ahead (1-30, default: 7)
+   
+   Example: /api/schedule?days=3
+   
+   Response Format:
+   {{
+     "success": boolean,
+     "scheduled_shows": [
+       {{
+         "series_title": string,
+         "episode_title": string,
+         "season": number,
+         "episode": number,
+         "air_date": string,
+         "overview": string,
+         "series_id": number,
+         "episode_id": number
+       }}
+     ],
+     "timestamp": string (ISO format),
+     "timezone": string
+   }}
+
+4. GET /api/full_sync
+   Description: Get all data in one call - recent content and schedule
+   Parameters:
+     - days (optional): Number of days for both recent content and schedule (1-30, default: 7)
+   
+   Example: /api/full_sync?days=5
+   
+   Response Format:
+   {{
+     "success": boolean,
+     "data": {{
+       "movies": [...], // Same format as /api/recent
+       "tv_shows": [...], // Same format as /api/recent
+       "scheduled_shows": [...] // Same format as /api/schedule
+     }},
+     "timestamp": string (ISO format),
+     "timezone": string
+   }}
+
+5. GET /api/library_stats
+   Description: Get comprehensive Plex library statistics
+   Parameters: None
+   
+   Response Format:
+   {{
+     "success": boolean,
+     "library_stats": {{
+       "total_movies": number,
+       "total_shows": number,
+       "total_episodes": number,
+       "libraries": [
+         {{
+           "title": string,
+           "type": string,
+           "count": number
+         }}
+       ]
+     }},
+     "timestamp": string (ISO format)
+   }}
+
+6. GET /api/config
+   Description: Get current configuration settings (sensitive data excluded)
+   Parameters: None
+   
+   Response Format:
+   {{
+     "success": boolean,
+     "config": {{
+       "plex_configured": boolean,
+       "sonarr_configured": boolean,
+       "github_configured": boolean,
+       "scheduler_enabled": boolean,
+       "timezone": string,
+       "output_format": {{
+         "movies_header": string,
+         "tv_header": string,
+         "schedule_header": string,
+         "movie_format": string,
+         "tv_format": string,
+         "schedule_format": string
+       }}
+     }}
+   }}
+
+ERROR HANDLING
+--------------
+All endpoints return appropriate HTTP status codes:
+- 200: Success
+- 400: Bad Request (invalid parameters)
+- 500: Internal Server Error
+
+Error responses include details:
+{{
+  "success": false,
+  "error": "Error description",
+  "timestamp": "ISO formatted timestamp"
+}}
+
+USAGE EXAMPLES
+--------------
+
+JavaScript (Fetch API):
+```javascript
+// Get recent content from last 7 days
+fetch('/api/recent?days=7')
+  .then(response => response.json())
+  .then(data => {{
+    if (data.success) {{
+      console.log('Movies:', data.movies);
+      console.log('TV Shows:', data.tv_shows);
+    }}
+  }});
+
+// Get all data in one call
+fetch('/api/full_sync?days=3')
+  .then(response => response.json())
+  .then(data => {{
+    if (data.success) {{
+      const {{ movies, tv_shows, scheduled_shows }} = data.data;
+      // Process your data here
+    }}
+  }});
+```
+
+Python (requests library):
+```python
+import requests
+
+# Get status of all services
+response = requests.get('http://your-server:5000/api/status')
+status_data = response.json()
+
+# Get recent content
+response = requests.get('http://your-server:5000/api/recent?days=14')
+content_data = response.json()
+
+if content_data['success']:
+    for movie in content_data['movies']:
+        print(f"{{movie['title']}} ({{movie['year']}})")
+```
+
+curl:
+```bash
+# Test connection status
+curl http://your-server:5000/api/status
+
+# Get recent content with pretty formatting
+curl -s http://your-server:5000/api/recent?days=7 | python -m json.tool
+
+# Get schedule for next 3 days
+curl http://your-server:5000/api/schedule?days=3
+```
+
+INTEGRATION NOTES
+-----------------
+- All timestamps are returned in ISO format with timezone information
+- The API respects the timezone configured in your Media Tracker settings
+- Large responses may take a few seconds depending on your Plex library size
+- The API supports CORS for cross-origin requests from web applications
+- Content is cached for optimal performance - data updates every few minutes
+
+RATE LIMITING
+-------------
+Currently no rate limiting is implemented, but it's recommended to:
+- Cache responses when possible
+- Avoid excessive polling (consider webhooks or scheduled checks instead)
+- Use the /api/full_sync endpoint for efficiency when you need multiple data types
+
+TROUBLESHOOTING
+---------------
+If endpoints return errors:
+1. Check /api/status to verify service connections
+2. Ensure Plex and Sonarr are properly configured and accessible
+3. Verify the Media Tracker has proper permissions to access your services
+4. Check the Media Tracker logs for detailed error messages
+
+For support and updates, visit the Media Tracker configuration page.
+
+---
+End of Documentation
+"""
+    
+    # Create a text file response
+    output = io.StringIO()
+    output.write(doc_content)
+    output.seek(0)
+    
+    response = Response(
+        output.getvalue(),
+        mimetype='text/plain',
+        headers={
+            'Content-Disposition': f'attachment; filename=media-tracker-api-docs-{datetime.now().strftime("%Y%m%d")}.txt',
+            'Content-Type': 'text/plain; charset=utf-8'
+        }
+    )
+    
+    return response
 
 # Initialize scheduler now that all functions are defined
 init_scheduler()

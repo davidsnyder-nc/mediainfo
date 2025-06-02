@@ -543,8 +543,17 @@
                         </div>
 
                         <div class="config-group">
-                            <h5 class="mb-3">Available Endpoints</h5>
-                            <p><strong>Base URL:</strong> <span id="baseUrl">Loading...</span></p>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h5 class="mb-1">Available Endpoints</h5>
+                                    <p class="mb-0"><strong>Base URL:</strong> <span id="baseUrl">Loading...</span></p>
+                                </div>
+                                <div>
+                                    <button class="btn btn-outline-secondary" onclick="downloadAPIDocumentation()">
+                                        <i class="bi bi-download me-2"></i>Download Complete API Guide
+                                    </button>
+                                </div>
+                            </div>
                             
                             <div class="row">
                                 <div class="col-md-6 mb-3">
