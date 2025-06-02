@@ -442,11 +442,25 @@
         }
 
         function refreshDashboard() {
+            console.log('Refreshing dashboard with new settings...');
             updateSectionVisibility();
             loadStatus();
             loadRecentContent();
             loadLibraryStats();
             setupAutoRefresh();
+            
+            // Visual feedback
+            const btn = document.querySelector('button[onclick="refreshDashboard()"]');
+            if (btn) {
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="bi bi-arrow-clockwise me-1 spin"></i>Refreshing...';
+                btn.disabled = true;
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }, 2000);
+            }
         }
 
         function updateSectionVisibility() {
@@ -538,19 +552,38 @@
             }
         }
 
+        // Make functions globally accessible
+        window.refreshDashboard = refreshDashboard;
+        window.updateSectionVisibility = updateSectionVisibility;
+
         // Add event listeners for settings changes
         document.addEventListener('DOMContentLoaded', function() {
+            // Add click handler for the refresh button
+            const refreshBtn = document.querySelector('button[onclick="refreshDashboard()"]');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    refreshDashboard();
+                });
+            }
+
             document.getElementById('daysRange').addEventListener('change', refreshDashboard);
             
             ['showStatus', 'showMovies', 'showTVShows', 'showSchedule', 'showLibraryStats'].forEach(id => {
-                document.getElementById(id).addEventListener('change', updateSectionVisibility);
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('change', updateSectionVisibility);
+                }
             });
             
-            document.getElementById('autoRefresh').addEventListener('change', setupAutoRefresh);
-        });
+            const autoRefreshElement = document.getElementById('autoRefresh');
+            if (autoRefreshElement) {
+                autoRefreshElement.addEventListener('change', setupAutoRefresh);
+            }
 
-        // Initial load
-        refreshDashboard();
+            // Initial load
+            refreshDashboard();
+        });
     </script>
 
     <style>
