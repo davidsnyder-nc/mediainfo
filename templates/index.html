@@ -1,518 +1,590 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Media Tracker Configuration</title>
-    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <title>Media Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <style>
         body {
-            background-color: var(--bs-secondary-bg);
+            background-color: #f8f9fa;
         }
-        .config-section {
-            margin-bottom: 1.5rem;
+        .nav-tabs {
+            border-bottom: 2px solid #e9ecef;
+        }
+        .nav-tabs .nav-link {
+            border-radius: 8px 8px 0 0;
+            margin-right: 4px;
+            border: 1px solid transparent;
+            color: #6c757d;
+            font-weight: 500;
+            padding: 12px 20px;
+        }
+        .nav-tabs .nav-link:hover {
+            border-color: #e9ecef #e9ecef #e9ecef;
+            color: #495057;
+        }
+        .nav-tabs .nav-link.active {
+            background-color: #fff;
+            border-color: #e9ecef #e9ecef #fff;
+            color: #0d6efd;
+        }
+        .tab-content {
+            background-color: #fff;
+            border: 1px solid #e9ecef;
+            border-top: none;
+            border-radius: 0 8px 8px 8px;
+            padding: 2rem;
+            min-height: 500px;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 12px;
+        }
+        .btn-primary {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 10px 24px;
+            font-weight: 500;
         }
-        .plex-card .card-header {
-            background-color: rgba(255, 152, 0, 0.1);
-            border-bottom-color: rgba(255, 152, 0, 0.2);
+        .btn-success {
+            background-color: #198754;
+            border-color: #198754;
+            border-radius: 8px;
+            padding: 10px 24px;
+            font-weight: 500;
         }
-        .sonarr-card .card-header {
-            background-color: rgba(76, 175, 80, 0.1);
-            border-bottom-color: rgba(76, 175, 80, 0.2);
+        .btn-outline-primary {
+            border-radius: 8px;
+            padding: 10px 24px;
+            font-weight: 500;
         }
-        .output-card .card-header {
-            background-color: rgba(33, 150, 243, 0.1);
-            border-bottom-color: rgba(33, 150, 243, 0.2);
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 1px solid #ced4da;
+            padding: 12px 16px;
         }
-        .text-card .card-header {
-            background-color: rgba(156, 39, 176, 0.1);
-            border-bottom-color: rgba(156, 39, 176, 0.2);
+        .form-control:focus, .form-select:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
         }
-        .github-card .card-header {
-            background-color: rgba(108, 117, 125, 0.1);
-            border-bottom-color: rgba(108, 117, 125, 0.2);
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
         }
-        .scheduler-card .card-header {
-            background-color: rgba(255, 193, 7, 0.1);
-            border-bottom-color: rgba(255, 193, 7, 0.2);
+        .status-connected {
+            background-color: #198754;
+        }
+        .status-disconnected {
+            background-color: #dc3545;
+        }
+        .status-unknown {
+            background-color: #6c757d;
+        }
+        .section-header {
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+        .icon-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+        }
+        .config-group {
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .alert {
+            border-radius: 8px;
+            border: none;
         }
     </style>
 </head>
 <body>
-    <div class="container mt-4">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="#">
+                <i class="bi bi-collection-play me-2"></i>Media Tracker
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text text-muted">
+                    <i class="bi bi-gear me-1"></i>Configuration Panel
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
         <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title mb-0">
-                            <i class="fas fa-tv me-2"></i>Media Tracker Configuration
-                        </h3>
-                    </div>
-                    <div class="card-body">
-                        {% with messages = get_flashed_messages(with_categories=true) %}
-                            {% if messages %}
-                                {% for category, message in messages %}
-                                    <div class="alert alert-{{ 'danger' if category == 'error' else ('warning' if category == 'warning' else 'success') }} alert-dismissible fade show" role="alert">
-                                        <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else ('exclamation-circle' if category == 'warning' else 'check-circle') }} me-2"></i>
-                                        {{ message }}
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="col-lg-11">
+                
+                <!-- Tab Navigation -->
+                <ul class="nav nav-tabs" id="configTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="plex-tab" data-bs-toggle="tab" data-bs-target="#plex" type="button" role="tab">
+                            <i class="bi bi-film me-2"></i>Plex
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="sonarr-tab" data-bs-toggle="tab" data-bs-target="#sonarr" type="button" role="tab">
+                            <i class="bi bi-tv me-2"></i>Sonarr
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="output-tab" data-bs-toggle="tab" data-bs-target="#output" type="button" role="tab">
+                            <i class="bi bi-file-text me-2"></i>Output Format
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="github-tab" data-bs-toggle="tab" data-bs-target="#github" type="button" role="tab">
+                            <i class="bi bi-github me-2"></i>GitHub
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="scheduler-tab" data-bs-toggle="tab" data-bs-target="#scheduler" type="button" role="tab">
+                            <i class="bi bi-clock me-2"></i>Scheduler
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="actions-tab" data-bs-toggle="tab" data-bs-target="#actions" type="button" role="tab">
+                            <i class="bi bi-play-circle me-2"></i>Actions
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content" id="configTabContent">
+                    
+                    <!-- Plex Tab -->
+                    <div class="tab-pane fade show active" id="plex" role="tabpanel">
+                        <div class="section-header">
+                            <div class="d-flex align-items-center">
+                                <div class="icon-badge">
+                                    <i class="bi bi-film"></i>
+                                </div>
+                                <div>
+                                    <h4 class="mb-1">Plex Media Server</h4>
+                                    <p class="text-muted mb-0">Configure your Plex server connection</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form id="configForm" method="POST" action="/save_config">
+                            <div class="config-group">
+                                <h5 class="mb-3">Connection Settings</h5>
+                                <div class="row">
+                                    <div class="col-md-8 mb-3">
+                                        <label for="plex_url" class="form-label">Plex Server URL</label>
+                                        <input type="url" class="form-control" id="plex_url" name="plex_url" 
+                                               value="{{ config.plex_url or '' }}" 
+                                               placeholder="http://192.168.1.100:32400">
+                                        <div class="form-text">Include the full URL with port number</div>
                                     </div>
-                                {% endfor %}
-                            {% endif %}
-                        {% endwith %}
-
-                        <form method="POST" action="{{ url_for('save_config') }}">
-                            <!-- Plex Configuration Card -->
-                            <div class="card mb-4 config-section plex-card">
-                                <div class="card-header">
-                                    <h5 class="card-title mb-0"><i class="fas fa-play me-2"></i>Plex Configuration</h5>
-                                </div>
-                                <div class="card-body">
-                                        {% if not config.plex_url or not config.plex_token %}
-                                        <div class="mb-3">
-                                            <div class="d-grid">
-                                                <a href="{{ url_for('plex_auth') }}" class="btn btn-primary">
-                                                    <i class="fas fa-link me-2"></i>Authenticate with Plex
-                                                </a>
-                                            </div>
-                                            <div class="form-text">Use the 4-digit code method for easy setup</div>
-                                        </div>
-                                        
-                                        <div class="text-center my-3">
-                                            <small class="text-muted">OR</small>
-                                        </div>
-                                        {% endif %}
-                                        
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label for="plex_url" class="form-label">Plex URL</label>
-                                                    <input type="url" class="form-control" id="plex_url" name="plex_url" 
-                                                           value="{{ config.plex_url }}" placeholder="http://localhost:32400" {% if not config.plex_url %}{% else %}required{% endif %}>
-                                                    <div class="form-text">Include http:// or https:// and port number</div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label for="plex_token" class="form-label">Plex Token</label>
-                                                    <input type="text" class="form-control" id="plex_token" name="plex_token" 
-                                                           value="{{ config.plex_token }}" placeholder="Your Plex authentication token" {% if not config.plex_token %}{% else %}required{% endif %}>
-                                                    <div class="form-text">
-                                                        <a href="https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/" 
-                                                           target="_blank" class="text-decoration-none">
-                                                            <i class="fas fa-external-link-alt me-1"></i>How to find your Plex token
-                                                        </a>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                </div>
-                            </div>
-
-                            <!-- Sonarr Configuration Card -->
-                            <div class="card mb-4 config-section sonarr-card">
-                                <div class="card-header">
-                                    <h5 class="card-title mb-0"><i class="fas fa-satellite-dish me-2"></i>Sonarr Configuration</h5>
-                                </div>
-                                <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label for="sonarr_url" class="form-label">Sonarr URL</label>
-                                                    <input type="url" class="form-control" id="sonarr_url" name="sonarr_url" 
-                                                           value="{{ config.sonarr_url }}" placeholder="http://localhost:8989" required>
-                                                    <div class="form-text">Include http:// or https:// and port number</div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label for="sonarr_api_key" class="form-label">Sonarr API Key</label>
-                                                    <input type="text" class="form-control" id="sonarr_api_key" name="sonarr_api_key" 
-                                                           value="{{ config.sonarr_api_key }}" placeholder="Your Sonarr API key" required>
-                                                    <div class="form-text">Found in Sonarr Settings → General → API Key</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                </div>
-                            </div>
-
-                            <!-- Output Configuration Card -->
-                            <div class="card mb-4 config-section output-card">
-                                <div class="card-header">
-                                    <h5 class="card-title mb-0"><i class="fas fa-folder me-2"></i>Output Configuration</h5>
-                                </div>
-                                <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label for="output_directory" class="form-label">Output Directory</label>
-                                                    <input type="text" class="form-control" id="output_directory" name="output_directory" 
-                                                           value="{{ config.output_directory }}" placeholder="./output">
-                                                    <div class="form-text">Directory where text files will be saved</div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label class="form-label">Output Sections</label>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" id="include_movies" name="include_movies" 
-                                                           {{ 'checked' if config.get('include_movies', True) }}>
-                                                    <label class="form-check-label" for="include_movies">
-                                                        Include Movies from Plex
-                                                    </label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" id="include_tv_shows" name="include_tv_shows" 
-                                                           {{ 'checked' if config.get('include_tv_shows', True) }}>
-                                                    <label class="form-check-label" for="include_tv_shows">
-                                                        Include TV Shows from Plex
-                                                    </label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" id="include_tv_calendar" name="include_tv_calendar" 
-                                                           {{ 'checked' if config.get('include_tv_calendar', True) }}>
-                                                    <label class="form-check-label" for="include_tv_calendar">
-                                                        Include TV Calendar from Sonarr
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                </div>
-                            </div>
-
-                            <!-- Text Customization Card -->
-                            <div class="card mb-4 config-section text-card">
-                                <div class="card-header">
-                                    <h5 class="card-title mb-0"><i class="fas fa-font me-2"></i>Text Customization</h5>
-                                </div>
-                                <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label for="report_title" class="form-label">Report Title</label>
-                                                    <input type="text" class="form-control" id="report_title" name="report_title" 
-                                                           value="{{ config.get('report_title', 'Media Tracker Report') }}" placeholder="Media Tracker Report">
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label for="movies_section_title" class="form-label">Movies Section Title</label>
-                                                    <input type="text" class="form-control" id="movies_section_title" name="movies_section_title" 
-                                                           value="{{ config.get('movies_section_title', 'PLEX MOVIES ADDED') }}" placeholder="PLEX MOVIES ADDED">
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label for="tv_shows_section_title" class="form-label">TV Shows Section Title</label>
-                                                    <input type="text" class="form-control" id="tv_shows_section_title" name="tv_shows_section_title" 
-                                                           value="{{ config.get('tv_shows_section_title', 'PLEX TV SHOWS ADDED') }}" placeholder="PLEX TV SHOWS ADDED">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label for="tv_calendar_section_title" class="form-label">TV Calendar Section Title</label>
-                                                    <input type="text" class="form-control" id="tv_calendar_section_title" name="tv_calendar_section_title" 
-                                                           value="{{ config.get('tv_calendar_section_title', 'SONARR TV SCHEDULE') }}" placeholder="SONARR TV SCHEDULE">
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label for="no_movies_text" class="form-label">No Movies Text</label>
-                                                    <input type="text" class="form-control" id="no_movies_text" name="no_movies_text" 
-                                                           value="{{ config.get('no_movies_text', 'No movies added recently.') }}" placeholder="No movies added recently.">
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label for="no_tv_text" class="form-label">No TV Shows Text</label>
-                                                    <input type="text" class="form-control" id="no_tv_text" name="no_tv_text" 
-                                                           value="{{ config.get('no_tv_text', 'No TV shows added recently.') }}" placeholder="No TV shows added recently.">
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label for="no_schedule_text" class="form-label">No Schedule Text</label>
-                                                    <input type="text" class="form-control" id="no_schedule_text" name="no_schedule_text" 
-                                                           value="{{ config.get('no_schedule_text', 'No shows scheduled for today.') }}" placeholder="No shows scheduled for today.">
-                                                </div>
-                                            </div>
-                                        </div>
-                                </div>
-                            </div>
-
-                            <!-- GitHub Integration Card -->
-                            <div class="card mb-4 config-section github-card">
-                                <div class="card-header">
-                                    <h5 class="card-title mb-0"><i class="fab fa-github me-2"></i>GitHub Integration (Optional)</h5>
-                                </div>
-                                <div class="card-body">
-                                        <div class="mb-3">
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="github_enabled" name="github_enabled" {{ 'checked' if config.github_enabled else '' }}>
-                                                <label class="form-check-label" for="github_enabled">
-                                                    Upload files to GitHub repository
-                                                </label>
-                                            </div>
-                                        </div>
-                                        
-                                        <div id="github_fields" style="display: {{ 'block' if config.github_enabled else 'none' }};">
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="mb-3">
-                                                        <label for="github_repo" class="form-label">Repository</label>
-                                                        <input type="text" class="form-control" id="github_repo" name="github_repo" 
-                                                               value="{{ config.github_repo }}" placeholder="username/repository-name">
-                                                        <div class="form-text">Format: username/repository-name</div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="mb-3">
-                                                        <label for="github_branch" class="form-label">Branch</label>
-                                                        <input type="text" class="form-control" id="github_branch" name="github_branch" 
-                                                               value="{{ config.github_branch or 'main' }}" placeholder="main">
-                                                        <div class="form-text">Target branch for uploads</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="github_token" class="form-label">GitHub Personal Access Token</label>
-                                                <input type="password" class="form-control" id="github_token" name="github_token" 
-                                                       value="{{ config.github_token }}" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
-                                                <div class="form-text">
-                                                    <a href="https://github.com/settings/tokens" target="_blank" class="text-decoration-none">
-                                                        <i class="fas fa-external-link-alt me-1"></i>Generate a personal access token
-                                                    </a>
-                                                    (needs 'repo' permission)
-                                                </div>
-                                            </div>
-                                        </div>
-                                </div>
-                            </div>
-
-                            <!-- Scheduler Configuration Section -->
-                            <div class="card mt-4 config-section scheduler-card">
-                                <div class="card-header">
-                                    <h5 class="card-title mb-0">
-                                        <i class="fas fa-clock me-2"></i>Automated Scheduling
-                                    </h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-md-12">
-                                            <div class="form-check form-switch mb-3">
-                                                <input class="form-check-input" type="checkbox" id="scheduler_enabled" name="scheduler_enabled" {{ 'checked' if config.scheduler_enabled else '' }}>
-                                                <label class="form-check-label" for="scheduler_enabled">
-                                                    <strong>Enable Automatic Media Sync</strong>
-                                                </label>
-                                            </div>
-                                            <p class="text-muted">When enabled, the media sync will run automatically based on your schedule preferences (Eastern US timezone).</p>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Connection Status</label>
+                                        <div class="p-3 bg-light rounded">
+                                            <span class="status-indicator status-{{ 'connected' if config.plex_url and config.plex_token else 'unknown' }}"></span>
+                                            {{ 'Connected' if config.plex_url and config.plex_token else 'Not Configured' }}
                                         </div>
                                     </div>
-                                    
-                                    <div id="scheduler_config_fields" style="display: {{ 'block' if config.scheduler_enabled else 'none' }};">
-                                        <div class="row mb-3">
-                                            <div class="col-md-6">
-                                                <label for="schedule_type" class="form-label">Schedule Type</label>
-                                                <select class="form-select" id="schedule_type" name="schedule_type">
-                                                    <option value="daily" {{ 'selected' if config.schedule_type == 'daily' else '' }}>Daily at specific time</option>
-                                                    <option value="hourly" {{ 'selected' if config.schedule_type == 'hourly' else '' }}>Every X hours</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        
-                                        <div id="daily_schedule_fields" style="display: {{ 'block' if config.schedule_type == 'daily' or not config.schedule_type else 'none' }};">
-                                            <div class="row">
-                                                <div class="col-md-4">
-                                                    <label for="scheduler_hour" class="form-label">Hour (24h Eastern)</label>
-                                                    <select class="form-select" id="scheduler_hour" name="scheduler_hour">
-                                                        {% for hour in range(24) %}
-                                                        <option value="{{ hour }}" {{ 'selected' if config.scheduler_hour == hour else '' }}>{{ '%02d'|format(hour) }}:00</option>
-                                                        {% endfor %}
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label for="scheduler_minute" class="form-label">Minute</label>
-                                                    <select class="form-select" id="scheduler_minute" name="scheduler_minute">
-                                                        {% for minute in range(60) %}
-                                                        <option value="{{ minute }}" {{ 'selected' if config.scheduler_minute == minute else '' }}>{{ '%02d'|format(minute) }}</option>
-                                                        {% endfor %}
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div id="hourly_schedule_fields" style="display: {{ 'block' if config.schedule_type == 'hourly' else 'none' }};">
-                                            <div class="row">
-                                                <div class="col-md-4">
-                                                    <label for="interval_hours" class="form-label">Interval (hours)</label>
-                                                    <select class="form-select" id="interval_hours" name="interval_hours">
-                                                        {% for hours in [1, 2, 3, 4, 6, 8, 12] %}
-                                                        <option value="{{ hours }}" {{ 'selected' if config.interval_hours == hours else '' }}>Every {{ hours }} hour{{ 's' if hours > 1 else '' }}</option>
-                                                        {% endfor %}
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    {% if config.scheduler_enabled %}
-                                    <div class="alert alert-info mt-3">
-                                        <i class="fas fa-info-circle me-2"></i>
-                                        <strong>Scheduler Active:</strong> 
-                                        {% if config.schedule_type == 'hourly' %}
-                                            Sync will run every {{ config.interval_hours|default(1) }} hour(s) at the top of the hour (Eastern timezone).
-                                        {% else %}
-                                            Daily sync will run at {{ config.scheduler_hour|default(19) }}:{{ '%02d'|format(config.scheduler_minute|default(55)) }} Eastern time.
-                                        {% endif %}
-                                    </div>
-                                    {% endif %}
                                 </div>
-                            </div>
-
-                            <!-- Single Save Button for All Configuration -->
-                            <div class="d-grid gap-2 mt-4">
-                                <button type="submit" class="btn btn-primary btn-lg">
-                                    <i class="fas fa-save me-2"></i>Save All Configuration
-                                </button>
+                                
+                                <div class="row">
+                                    <div class="col-md-8 mb-3">
+                                        <label for="plex_token" class="form-label">Plex Token</label>
+                                        <input type="password" class="form-control" id="plex_token" name="plex_token" 
+                                               value="{{ config.plex_token or '' }}" 
+                                               placeholder="Your Plex authentication token">
+                                        <div class="form-text">Get this from your Plex account settings</div>
+                                    </div>
+                                    <div class="col-md-4 mb-3 d-flex align-items-end">
+                                        <button type="button" class="btn btn-outline-primary w-100" onclick="startPlexAuth()">
+                                            <i class="bi bi-shield-lock me-2"></i>OAuth Login
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </form>
+                    </div>
 
-                    </div>
-                </div>
-                
-                <div class="card mt-4">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-cog me-2"></i>Output Format Customization
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <form method="POST" action="{{ url_for('save_output_format') }}">
+                    <!-- Sonarr Tab -->
+                    <div class="tab-pane fade" id="sonarr" role="tabpanel">
+                        <div class="section-header">
+                            <div class="d-flex align-items-center">
+                                <div class="icon-badge">
+                                    <i class="bi bi-tv"></i>
+                                </div>
+                                <div>
+                                    <h4 class="mb-1">Sonarr</h4>
+                                    <p class="text-muted mb-0">Configure your Sonarr instance for TV show tracking</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="config-group">
+                            <h5 class="mb-3">API Configuration</h5>
                             <div class="row">
-                                <div class="col-md-4">
-                                    <h6><i class="fas fa-film me-2"></i>Movie Format</h6>
-                                    <div class="mb-3">
-                                        <label for="movie_format" class="form-label">Template</label>
-                                        <textarea class="form-control" id="movie_format" name="movie_format" rows="3" placeholder="Title: {title}&#10;Year: {year}&#10;Added: {added_date}&#10;{separator}">{{ config.output_format.movie_format if config.output_format else 'Title: {title}\nYear: {year}\nAdded: {added_date}\n{separator}' }}</textarea>
-                                        <div class="form-text">Variables: {title}, {year}, {added_date}, {separator}</div>
-                                    </div>
+                                <div class="col-md-8 mb-3">
+                                    <label for="sonarr_url" class="form-label">Sonarr URL</label>
+                                    <input type="url" class="form-control" id="sonarr_url" name="sonarr_url" 
+                                           value="{{ config.sonarr_url or '' }}" 
+                                           placeholder="http://192.168.1.100:8989" form="configForm">
+                                    <div class="form-text">Include the full URL with port number</div>
                                 </div>
-                                <div class="col-md-4">
-                                    <h6><i class="fas fa-tv me-2"></i>TV Show Format</h6>
-                                    <div class="mb-3">
-                                        <label for="tv_format" class="form-label">Template</label>
-                                        <textarea class="form-control" id="tv_format" name="tv_format" rows="3" placeholder="Title: {title}&#10;Year: {year}&#10;Added: {added_date}&#10;{separator}">{{ config.output_format.tv_format if config.output_format else 'Title: {title}\nYear: {year}\nAdded: {added_date}\n{separator}' }}</textarea>
-                                        <div class="form-text">Variables: {title}, {year}, {added_date}, {separator}</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <h6><i class="fas fa-calendar me-2"></i>Schedule Format</h6>
-                                    <div class="mb-3">
-                                        <label for="schedule_format" class="form-label">Template</label>
-                                        <textarea class="form-control" id="schedule_format" name="schedule_format" rows="3" placeholder="Series: {series_title}&#10;Episode: S{season:02d}E{episode:02d} - {episode_title}&#10;Air Date: {air_date}&#10;{separator}">{{ config.output_format.schedule_format if config.output_format else 'Series: {series_title}\nEpisode: S{season:02d}E{episode:02d} - {episode_title}\nAir Date: {air_date}\n{separator}' }}</textarea>
-                                        <div class="form-text">Variables: {series_title}, {episode_title}, {season}, {episode}, {air_date}, {separator}</div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Connection Status</label>
+                                    <div class="p-3 bg-light rounded">
+                                        <span class="status-indicator status-{{ 'connected' if config.sonarr_url and config.sonarr_api_key else 'unknown' }}"></span>
+                                        {{ 'Connected' if config.sonarr_url and config.sonarr_api_key else 'Not Configured' }}
                                     </div>
                                 </div>
                             </div>
                             
+                            <div class="mb-3">
+                                <label for="sonarr_api_key" class="form-label">API Key</label>
+                                <input type="password" class="form-control" id="sonarr_api_key" name="sonarr_api_key" 
+                                       value="{{ config.sonarr_api_key or '' }}" 
+                                       placeholder="Your Sonarr API key" form="configForm">
+                                <div class="form-text">Found in Sonarr → Settings → General → API Key</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Output Format Tab -->
+                    <div class="tab-pane fade" id="output" role="tabpanel">
+                        <div class="section-header">
+                            <div class="d-flex align-items-center">
+                                <div class="icon-badge">
+                                    <i class="bi bi-file-text"></i>
+                                </div>
+                                <div>
+                                    <h4 class="mb-1">Output Format</h4>
+                                    <p class="text-muted mb-0">Customize how your media information is formatted</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="config-group">
+                            <h5 class="mb-3">File Settings</h5>
                             <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="include_timestamps" name="include_timestamps" {{ 'checked' if config.output_format.include_timestamps if config.output_format else 'checked' }}>
-                                            <label class="form-check-label" for="include_timestamps">
-                                                Include timestamps in headers
-                                            </label>
-                                        </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="filename" class="form-label">Output Filename</label>
+                                    <input type="text" class="form-control" id="filename" name="filename" 
+                                           value="{{ config.filename or 'daily_media_report.txt' }}" form="configForm">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="timezone" class="form-label">Timezone</label>
+                                    <select class="form-select" id="timezone" name="timezone" form="configForm">
+                                        <option value="US/Eastern" {{ 'selected' if config.timezone == 'US/Eastern' else '' }}>Eastern (US/Eastern)</option>
+                                        <option value="US/Central" {{ 'selected' if config.timezone == 'US/Central' else '' }}>Central (US/Central)</option>
+                                        <option value="US/Mountain" {{ 'selected' if config.timezone == 'US/Mountain' else '' }}>Mountain (US/Mountain)</option>
+                                        <option value="US/Pacific" {{ 'selected' if config.timezone == 'US/Pacific' else '' }}>Pacific (US/Pacific)</option>
+                                        <option value="UTC" {{ 'selected' if config.timezone == 'UTC' else '' }}>UTC</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="config-group">
+                            <h5 class="mb-3">Format Templates</h5>
+                            <div class="mb-3">
+                                <label for="movie_format" class="form-label">Movie Format</label>
+                                <input type="text" class="form-control" id="movie_format" name="movie_format" 
+                                       value="{{ config.movie_format or '{title} ({year}) - Added: {added_date}' }}" form="configForm">
+                                <div class="form-text">Available variables: {title}, {year}, {added_date}</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="tv_format" class="form-label">TV Show Format</label>
+                                <input type="text" class="form-control" id="tv_format" name="tv_format" 
+                                       value="{{ config.tv_format or '{title} - Added: {added_date}' }}" form="configForm">
+                                <div class="form-text">Available variables: {title}, {added_date}</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="schedule_format" class="form-label">Schedule Format</label>
+                                <input type="text" class="form-control" id="schedule_format" name="schedule_format" 
+                                       value="{{ config.schedule_format or '{series_title} - S{season:02d}E{episode:02d} - {episode_title} (Airs: {air_date})' }}" form="configForm">
+                                <div class="form-text">Available variables: {series_title}, {episode_title}, {season}, {episode}, {air_date}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- GitHub Tab -->
+                    <div class="tab-pane fade" id="github" role="tabpanel">
+                        <div class="section-header">
+                            <div class="d-flex align-items-center">
+                                <div class="icon-badge">
+                                    <i class="bi bi-github"></i>
+                                </div>
+                                <div>
+                                    <h4 class="mb-1">GitHub Integration</h4>
+                                    <p class="text-muted mb-0">Optional: Upload reports to your GitHub repository</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="config-group">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="github_enabled" name="github_enabled" 
+                                       {{ 'checked' if config.github_enabled else '' }} form="configForm">
+                                <label class="form-check-label" for="github_enabled">
+                                    <strong>Enable GitHub Upload</strong>
+                                </label>
+                            </div>
+
+                            <div id="githubSettings" style="{{ 'display: none;' if not config.github_enabled else '' }}">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="github_owner" class="form-label">Repository Owner</label>
+                                        <input type="text" class="form-control" id="github_owner" name="github_owner" 
+                                               value="{{ config.github_owner or '' }}" 
+                                               placeholder="your-username" form="configForm">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="github_repo" class="form-label">Repository Name</label>
+                                        <input type="text" class="form-control" id="github_repo" name="github_repo" 
+                                               value="{{ config.github_repo or '' }}" 
+                                               placeholder="my-repo" form="configForm">
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="file_naming" class="form-label">File Naming</label>
-                                        <select class="form-select" id="file_naming" name="file_naming">
-                                            <option value="date_suffix" {{ 'selected' if config.output_format.file_naming == 'date_suffix' if config.output_format else 'selected' }}>filename_2025-06-01.txt</option>
-                                            <option value="date_prefix" {{ 'selected' if config.output_format.file_naming == 'date_prefix' if config.output_format else '' }}>2025-06-01_filename.txt</option>
-                                            <option value="custom" {{ 'selected' if config.output_format.file_naming == 'custom' if config.output_format else '' }}>Custom names (no dates)</option>
+                                
+                                <div class="mb-3">
+                                    <label for="github_token" class="form-label">Personal Access Token</label>
+                                    <input type="password" class="form-control" id="github_token" name="github_token" 
+                                           value="{{ config.github_token or '' }}" 
+                                           placeholder="ghp_xxxxxxxxxxxx" form="configForm">
+                                    <div class="form-text">Create a token with 'repo' permissions at github.com/settings/tokens</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scheduler Tab -->
+                    <div class="tab-pane fade" id="scheduler" role="tabpanel">
+                        <div class="section-header">
+                            <div class="d-flex align-items-center">
+                                <div class="icon-badge">
+                                    <i class="bi bi-clock"></i>
+                                </div>
+                                <div>
+                                    <h4 class="mb-1">Automated Scheduler</h4>
+                                    <p class="text-muted mb-0">Schedule automatic media syncing</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="config-group">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="scheduler_enabled" name="scheduler_enabled" 
+                                       {{ 'checked' if config.scheduler_enabled else '' }} form="configForm">
+                                <label class="form-check-label" for="scheduler_enabled">
+                                    <strong>Enable Automated Scheduling</strong>
+                                </label>
+                            </div>
+
+                            <div id="schedulerSettings" style="{{ 'display: none;' if not config.scheduler_enabled else '' }}">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="schedule_type" class="form-label">Schedule Type</label>
+                                        <select class="form-select" id="schedule_type" name="schedule_type" form="configForm">
+                                            <option value="daily" {{ 'selected' if config.schedule_type == 'daily' else '' }}>Daily</option>
+                                            <option value="hourly" {{ 'selected' if config.schedule_type == 'hourly' else '' }}>Hourly</option>
                                         </select>
                                     </div>
                                 </div>
-                            </div>
-                            
-                            <div id="custom_filename_fields" style="display: {{ 'block' if config.output_format.file_naming == 'custom' if config.output_format else 'none' }};">
-                                <div class="mb-3">
-                                    <label for="single_output_file" class="form-label">Output Filename</label>
-                                    <input type="text" class="form-control" id="single_output_file" name="single_output_file" 
-                                           value="{{ config.output_format.single_output_file if config.output_format else 'media_tracker.txt' }}" placeholder="media_tracker.txt">
-                                    <div class="form-text">All data (movies, TV shows, and schedule) will be written to this single file</div>
+
+                                <div id="dailySchedule" style="{{ 'display: none;' if config.schedule_type == 'hourly' else '' }}">
+                                    <div class="row">
+                                        <div class="col-md-3 mb-3">
+                                            <label for="schedule_hour" class="form-label">Hour (24h)</label>
+                                            <select class="form-select" id="schedule_hour" name="schedule_hour" form="configForm">
+                                                {% for hour in range(24) %}
+                                                <option value="{{ hour }}" {{ 'selected' if config.schedule_hour == hour else '' }}>{{ '%02d' | format(hour) }}:00</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label for="schedule_minute" class="form-label">Minute</label>
+                                            <select class="form-select" id="schedule_minute" name="schedule_minute" form="configForm">
+                                                {% for minute in range(0, 60) %}
+                                                <option value="{{ minute }}" {{ 'selected' if config.schedule_minute == minute else '' }}>{{ '%02d' | format(minute) }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="hourlySchedule" style="{{ 'display: none;' if config.schedule_type == 'daily' else '' }}">
+                                    <div class="row">
+                                        <div class="col-md-3 mb-3">
+                                            <label for="schedule_interval" class="form-label">Every X Hours</label>
+                                            <select class="form-select" id="schedule_interval" name="schedule_interval" form="configForm">
+                                                {% for interval in [1, 2, 3, 4, 6, 8, 12] %}
+                                                <option value="{{ interval }}" {{ 'selected' if config.schedule_interval == interval else '' }}>{{ interval }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-secondary">
-                                    <i class="fas fa-save me-2"></i>Save Output Format
-                                </button>
-                            </div>
-                        </form>
+                        </div>
                     </div>
-                </div>
-                
-                <div class="card mt-4 config-section actions-card">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-tools me-2"></i>Actions
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <a href="{{ url_for('test_connection') }}" class="btn btn-secondary w-100">
-                                    <i class="fas fa-plug me-2"></i>Test API Connections
-                                </a>
-                                <small class="form-text">Verify that both Plex and Sonarr APIs are accessible</small>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <a href="{{ url_for('run_daily_sync') }}" class="btn btn-success w-100">
-                                    <i class="fas fa-sync-alt me-2"></i>Run Daily Sync
-                                </a>
-                                <small class="form-text">Manually trigger the daily content sync process</small>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <a href="{{ url_for('clear_config') }}" class="btn btn-warning w-100" onclick="return confirm('Are you sure you want to clear all configuration? This cannot be undone.')">
-                                    <i class="fas fa-trash me-2"></i>Clear Configuration
-                                </a>
-                                <small class="form-text">Reset all settings and start fresh</small>
+
+                    <!-- Actions Tab -->
+                    <div class="tab-pane fade" id="actions" role="tabpanel">
+                        <div class="section-header">
+                            <div class="d-flex align-items-center">
+                                <div class="icon-badge">
+                                    <i class="bi bi-play-circle"></i>
+                                </div>
+                                <div>
+                                    <h4 class="mb-1">Actions</h4>
+                                    <p class="text-muted mb-0">Test connections and run sync operations</p>
+                                </div>
                             </div>
                         </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="config-group">
+                                    <h5 class="mb-3">Test Connections</h5>
+                                    <div class="d-grid gap-2">
+                                        <button type="button" class="btn btn-outline-primary" onclick="testConnection()">
+                                            <i class="bi bi-wifi me-2"></i>Test All Connections
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="config-group">
+                                    <h5 class="mb-3">Manual Sync</h5>
+                                    <div class="d-grid gap-2">
+                                        <button type="button" class="btn btn-success" onclick="runDailySync()">
+                                            <i class="bi bi-arrow-repeat me-2"></i>Run Daily Sync
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="config-group mt-4">
+                            <h5 class="mb-3 text-danger">Danger Zone</h5>
+                            <button type="button" class="btn btn-outline-danger" onclick="clearConfig()">
+                                <i class="bi bi-trash me-2"></i>Clear All Configuration
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Save Button (Fixed at bottom) -->
+                <div class="bg-white p-3 border-top mt-4">
+                    <div class="d-flex justify-content-between">
+                        <div id="saveStatus"></div>
+                        <button type="submit" form="configForm" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-2"></i>Save Configuration
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
-        // Toggle GitHub fields visibility
-        document.getElementById('github_enabled').addEventListener('change', function() {
-            const githubFields = document.getElementById('github_fields');
-            githubFields.style.display = this.checked ? 'block' : 'none';
-        });
-        
-        // Toggle custom filename fields visibility
-        document.getElementById('file_naming').addEventListener('change', function() {
-            const customFields = document.getElementById('custom_filename_fields');
-            customFields.style.display = this.value === 'custom' ? 'block' : 'none';
-        });
-        
-        // Toggle scheduler configuration fields visibility
-        document.getElementById('scheduler_enabled').addEventListener('change', function() {
-            const configFields = document.getElementById('scheduler_config_fields');
-            configFields.style.display = this.checked ? 'block' : 'none';
-        });
-        
-        // Toggle between daily and hourly schedule fields
+        // Tab switching functionality
         document.getElementById('schedule_type').addEventListener('change', function() {
-            const dailyFields = document.getElementById('daily_schedule_fields');
-            const hourlyFields = document.getElementById('hourly_schedule_fields');
+            const scheduleType = this.value;
+            document.getElementById('dailySchedule').style.display = scheduleType === 'daily' ? 'block' : 'none';
+            document.getElementById('hourlySchedule').style.display = scheduleType === 'hourly' ? 'block' : 'none';
+        });
+
+        document.getElementById('scheduler_enabled').addEventListener('change', function() {
+            document.getElementById('schedulerSettings').style.display = this.checked ? 'block' : 'none';
+        });
+
+        document.getElementById('github_enabled').addEventListener('change', function() {
+            document.getElementById('githubSettings').style.display = this.checked ? 'block' : 'none';
+        });
+
+        // API functions
+        function startPlexAuth() {
+            window.open('/plex_auth', 'plexAuth', 'width=600,height=600');
+        }
+
+        function testConnection() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-arrow-repeat me-2 spinner-border spinner-border-sm"></i>Testing...';
             
-            if (this.value === 'daily') {
-                dailyFields.style.display = 'block';
-                hourlyFields.style.display = 'none';
-            } else if (this.value === 'hourly') {
-                dailyFields.style.display = 'none';
-                hourlyFields.style.display = 'block';
+            fetch('/test_connection', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    let message = '';
+                    if (data.plex) message += 'Plex: ✓ ';
+                    else message += 'Plex: ✗ ';
+                    if (data.sonarr) message += 'Sonarr: ✓ ';
+                    else message += 'Sonarr: ✗ ';
+                    if (data.github) message += 'GitHub: ✓';
+                    else message += 'GitHub: ✗';
+                    
+                    document.getElementById('saveStatus').innerHTML = `<div class="alert alert-info">${message}</div>`;
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-wifi me-2"></i>Test All Connections';
+                });
+        }
+
+        function runDailySync() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-arrow-repeat me-2 spinner-border spinner-border-sm"></i>Running...';
+            
+            fetch('/run_daily_sync', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    const alertType = data.success ? 'alert-success' : 'alert-danger';
+                    document.getElementById('saveStatus').innerHTML = `<div class="alert ${alertType}">${data.message}</div>`;
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-arrow-repeat me-2"></i>Run Daily Sync';
+                });
+        }
+
+        function clearConfig() {
+            if (confirm('Are you sure you want to clear all configuration? This cannot be undone.')) {
+                fetch('/clear_config', { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        }
+                    });
             }
+        }
+
+        // Form submission
+        document.getElementById('configForm').addEventListener('submit', function(e) {
+            const btn = this.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-arrow-repeat me-2 spinner-border spinner-border-sm"></i>Saving...';
         });
     </script>
 </body>
