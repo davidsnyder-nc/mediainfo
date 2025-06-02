@@ -423,11 +423,19 @@ def api_recent():
     tracker = MediaTracker(config)
     
     try:
-        movies, tv_shows = tracker.get_plex_recent_content()
+        # Get days parameter, default to 7
+        days = request.args.get('days', 7, type=int)
+        if days < 1 or days > 30:
+            days = 7
+        
+        movies, tv_shows = tracker.get_plex_recent_content_extended(days=days)
         return jsonify({
             'success': True,
+            'days': days,
             'movies': movies,
             'tv_shows': tv_shows,
+            'movies_count': len(movies),
+            'tv_shows_count': len(tv_shows),
             'timestamp': datetime.now(pytz.timezone(config.get('timezone', 'US/Eastern'))).isoformat()
         })
     except Exception as e:
@@ -435,15 +443,22 @@ def api_recent():
 
 @app.route('/api/schedule')
 def api_schedule():
-    """Get today's TV schedule with detailed information"""
+    """Get TV schedule with detailed information"""
     config = config_manager.get_config()
     tracker = MediaTracker(config)
     
     try:
-        scheduled_shows = tracker.get_sonarr_today_schedule()
+        # Get days parameter, default to 7
+        days = request.args.get('days', 7, type=int)
+        if days < 1 or days > 30:
+            days = 7
+        
+        scheduled_shows = tracker.get_sonarr_calendar_extended(days=days)
         return jsonify({
             'success': True,
+            'days': days,
             'scheduled_shows': scheduled_shows,
+            'scheduled_count': len(scheduled_shows),
             'timestamp': datetime.now(pytz.timezone(config.get('timezone', 'US/Eastern'))).isoformat()
         })
     except Exception as e:
@@ -456,18 +471,49 @@ def api_full_sync():
     tracker = MediaTracker(config)
     
     try:
-        movies, tv_shows = tracker.get_plex_recent_content()
-        scheduled_shows = tracker.get_sonarr_today_schedule()
+        # Get days parameter, default to 7
+        days = request.args.get('days', 7, type=int)
+        if days < 1 or days > 30:
+            days = 7
+        
+        movies, tv_shows = tracker.get_plex_recent_content_extended(days=days)
+        scheduled_shows = tracker.get_sonarr_calendar_extended(days=days)
+        
+        # Get library stats
+        library_stats = tracker.get_plex_library_stats()
         
         return jsonify({
             'success': True,
+            'days': days,
             'data': {
                 'movies': movies,
                 'tv_shows': tv_shows,
-                'scheduled_shows': scheduled_shows
+                'scheduled_shows': scheduled_shows,
+                'library_stats': library_stats
+            },
+            'counts': {
+                'movies': len(movies),
+                'tv_shows': len(tv_shows),
+                'scheduled_shows': len(scheduled_shows)
             },
             'timestamp': datetime.now(pytz.timezone(config.get('timezone', 'US/Eastern'))).isoformat(),
             'timezone': config.get('timezone', 'US/Eastern')
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/library_stats')
+def api_library_stats():
+    """Get Plex library statistics"""
+    config = config_manager.get_config()
+    tracker = MediaTracker(config)
+    
+    try:
+        library_stats = tracker.get_plex_library_stats()
+        return jsonify({
+            'success': True,
+            'library_stats': library_stats,
+            'timestamp': datetime.now(pytz.timezone(config.get('timezone', 'US/Eastern'))).isoformat()
         })
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})

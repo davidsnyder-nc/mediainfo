@@ -358,6 +358,202 @@ class MediaTracker:
             logging.error(f"Error uploading to GitHub: {str(e)}")
             return False
     
+    def get_plex_recent_content_extended(self, days=7):
+        """Get movies and TV shows added to Plex in the last N days with extended metadata"""
+        movies = []
+        tv_shows = []
+        
+        try:
+            # Calculate date range
+            end_date = datetime.now()
+            start_date = end_date - timedelta(days=days)
+            start_timestamp = int(start_date.timestamp())
+            
+            # Get recently added content
+            url = urljoin(self.config['plex_url'], '/library/recentlyAdded')
+            headers = {'X-Plex-Token': self.config['plex_token']}
+            params = {'X-Plex-Container-Start': '0', 'X-Plex-Container-Size': '100'}
+            
+            response = self.session.get(url, headers=headers, params=params)
+            response.raise_for_status()
+            
+            data = response.json()
+            
+            if 'MediaContainer' in data and 'Metadata' in data['MediaContainer']:
+                for item in data['MediaContainer']['Metadata']:
+                    added_at = item.get('addedAt', 0)
+                    
+                    if int(added_at) >= start_timestamp:
+                        # Enhanced metadata extraction
+                        base_item = {
+                            'title': item.get('title', 'Unknown'),
+                            'year': item.get('year', 'Unknown'),
+                            'added_date': datetime.fromtimestamp(int(added_at)).strftime('%Y-%m-%d'),
+                            'added_timestamp': int(added_at),
+                            'rating': item.get('rating', 'Not Rated'),
+                            'summary': item.get('summary', ''),
+                            'duration': item.get('duration', 0),
+                            'thumb': item.get('thumb', ''),
+                            'art': item.get('art', ''),
+                            'genres': [genre.get('tag', '') for genre in item.get('Genre', [])],
+                            'studio': item.get('studio', ''),
+                            'content_rating': item.get('contentRating', ''),
+                            'plex_key': item.get('key', ''),
+                            'guid': item.get('guid', '')
+                        }
+                        
+                        if item.get('type') == 'movie':
+                            # Movie-specific fields
+                            movie_item = base_item.copy()
+                            movie_item.update({
+                                'director': [director.get('tag', '') for director in item.get('Director', [])],
+                                'writers': [writer.get('tag', '') for writer in item.get('Writer', [])],
+                                'actors': [{'name': actor.get('tag', ''), 'role': actor.get('role', '')} for actor in item.get('Role', [])[:10]],  # Limit to top 10
+                                'country': [country.get('tag', '') for country in item.get('Country', [])],
+                                'tagline': item.get('tagline', ''),
+                                'originally_available_at': item.get('originallyAvailableAt', '')
+                            })
+                            movies.append(movie_item)
+                            
+                        elif item.get('type') == 'show':
+                            # TV Show-specific fields
+                            tv_item = base_item.copy()
+                            tv_item.update({
+                                'episode_count': item.get('leafCount', 0),
+                                'season_count': item.get('childCount', 0),
+                                'originally_available_at': item.get('originallyAvailableAt', ''),
+                                'network': item.get('network', ''),
+                                'status': item.get('status', '')
+                            })
+                            tv_shows.append(tv_item)
+        
+        except Exception as e:
+            logging.error(f"Error getting extended Plex content: {str(e)}")
+        
+        return movies, tv_shows
+    
+    def get_sonarr_calendar_extended(self, days=7):
+        """Get TV shows from Sonarr calendar for the next N days with extended metadata"""
+        scheduled_shows = []
+        
+        try:
+            # Get date range
+            start_date = datetime.now().strftime('%Y-%m-%d')
+            end_date = (datetime.now() + timedelta(days=days)).strftime('%Y-%m-%d')
+            
+            # Get calendar data
+            url = urljoin(self.config['sonarr_url'], '/api/v3/calendar')
+            headers = {'X-Api-Key': self.config['sonarr_api_key']}
+            params = {'start': start_date, 'end': end_date}
+            
+            response = self.session.get(url, headers=headers, params=params)
+            response.raise_for_status()
+            
+            episodes = response.json()
+            
+            # Get series data for additional metadata
+            series_url = urljoin(self.config['sonarr_url'], '/api/v3/series')
+            series_response = self.session.get(series_url, headers=headers)
+            series_response.raise_for_status()
+            series_data = series_response.json()
+            
+            # Create series lookup
+            series_lookup = {series['id']: series for series in series_data}
+            
+            for episode in episodes:
+                series_id = episode.get('seriesId')
+                series = series_lookup.get(series_id, {})
+                air_date = episode.get('airDateUtc', '')
+                
+                if air_date:
+                    episode_data = {
+                        'series_title': series.get('title', 'Unknown Series'),
+                        'episode_title': episode.get('title', 'Unknown Episode'),
+                        'season': episode.get('seasonNumber', 'Unknown'),
+                        'episode': episode.get('episodeNumber', 'Unknown'),
+                        'air_date': air_date.split('T')[0] if 'T' in air_date else air_date,
+                        'air_time': air_date.split('T')[1].split('.')[0] if 'T' in air_date else '',
+                        'overview': episode.get('overview', ''),
+                        'series_overview': series.get('overview', ''),
+                        'network': series.get('network', ''),
+                        'status': series.get('status', ''),
+                        'genres': series.get('genres', []),
+                        'year': series.get('year', 0),
+                        'runtime': series.get('runtime', 0),
+                        'certification': series.get('certification', ''),
+                        'image_url': series.get('images', [{}])[0].get('url', '') if series.get('images') else '',
+                        'imdb_id': series.get('imdbId', ''),
+                        'tvdb_id': series.get('tvdbId', ''),
+                        'series_type': series.get('seriesType', ''),
+                        'language': series.get('languageProfileId', ''),
+                        'quality_profile': series.get('qualityProfileId', ''),
+                        'monitored': series.get('monitored', False),
+                        'episode_monitored': episode.get('monitored', False),
+                        'has_file': episode.get('hasFile', False),
+                        'episode_id': episode.get('id', 0),
+                        'series_id': series_id
+                    }
+                    scheduled_shows.append(episode_data)
+        
+        except Exception as e:
+            logging.error(f"Error getting extended Sonarr calendar: {str(e)}")
+        
+        return scheduled_shows
+    
+    def get_plex_library_stats(self):
+        """Get comprehensive Plex library statistics"""
+        stats = {
+            'libraries': [],
+            'total_movies': 0,
+            'total_shows': 0,
+            'total_episodes': 0,
+            'total_music': 0
+        }
+        
+        try:
+            # Get library sections
+            url = urljoin(self.config['plex_url'], '/library/sections')
+            headers = {'X-Plex-Token': self.config['plex_token']}
+            
+            response = self.session.get(url, headers=headers)
+            response.raise_for_status()
+            
+            data = response.json()
+            
+            if 'MediaContainer' in data and 'Directory' in data['MediaContainer']:
+                for library in data['MediaContainer']['Directory']:
+                    library_info = {
+                        'key': library.get('key', ''),
+                        'title': library.get('title', ''),
+                        'type': library.get('type', ''),
+                        'count': 0,
+                        'size': 0
+                    }
+                    
+                    # Get library contents count
+                    lib_url = urljoin(self.config['plex_url'], f'/library/sections/{library.get("key")}/all')
+                    lib_response = self.session.get(lib_url, headers=headers, params={'X-Plex-Container-Size': '0'})
+                    
+                    if lib_response.status_code == 200:
+                        lib_data = lib_response.json()
+                        if 'MediaContainer' in lib_data:
+                            library_info['count'] = lib_data['MediaContainer'].get('totalSize', 0)
+                    
+                    stats['libraries'].append(library_info)
+                    
+                    # Update totals
+                    if library.get('type') == 'movie':
+                        stats['total_movies'] += library_info['count']
+                    elif library.get('type') == 'show':
+                        stats['total_shows'] += library_info['count']
+                    elif library.get('type') == 'artist':
+                        stats['total_music'] += library_info['count']
+        
+        except Exception as e:
+            logging.error(f"Error getting Plex library stats: {str(e)}")
+        
+        return stats
+
     def run_daily_sync(self):
         """Run the complete daily sync process"""
         try:
@@ -370,7 +566,7 @@ class MediaTracker:
             if not self.test_sonarr_connection():
                 return {'success': False, 'error': 'Sonarr connection failed'}
             
-            # Get data from APIs
+            # Get data from APIs (keeping original methods for text file output)
             movies, tv_shows = self.get_plex_recent_content()
             scheduled_shows = self.get_sonarr_today_schedule()
             

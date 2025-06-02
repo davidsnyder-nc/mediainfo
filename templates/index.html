@@ -575,8 +575,9 @@
                                             <h6 class="mb-0"><span class="badge bg-success">GET</span> /api/recent</h6>
                                         </div>
                                         <div class="card-body">
-                                            <p class="small mb-2">Get recently added movies and TV shows</p>
-                                            <button class="btn btn-outline-primary btn-sm" onclick="testAPI('/api/recent')">Test Endpoint</button>
+                                            <p class="small mb-2">Get recently added movies and TV shows with extended metadata</p>
+                                            <p class="small text-muted mb-2">Parameters: ?days=7 (1-30 days)</p>
+                                            <button class="btn btn-outline-primary btn-sm" onclick="testAPI('/api/recent?days=7')">Test Endpoint</button>
                                         </div>
                                     </div>
                                 </div>
@@ -587,8 +588,21 @@
                                             <h6 class="mb-0"><span class="badge bg-success">GET</span> /api/schedule</h6>
                                         </div>
                                         <div class="card-body">
-                                            <p class="small mb-2">Get today's TV schedule from Sonarr</p>
-                                            <button class="btn btn-outline-primary btn-sm" onclick="testAPI('/api/schedule')">Test Endpoint</button>
+                                            <p class="small mb-2">Get TV schedule with extended metadata</p>
+                                            <p class="small text-muted mb-2">Parameters: ?days=7 (1-30 days)</p>
+                                            <button class="btn btn-outline-primary btn-sm" onclick="testAPI('/api/schedule?days=7')">Test Endpoint</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-header">
+                                            <h6 class="mb-0"><span class="badge bg-success">GET</span> /api/library_stats</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="small mb-2">Get comprehensive Plex library statistics</p>
+                                            <button class="btn btn-outline-primary btn-sm" onclick="testAPI('/api/library_stats')">Test Endpoint</button>
                                         </div>
                                     </div>
                                 </div>
@@ -599,8 +613,9 @@
                                             <h6 class="mb-0"><span class="badge bg-success">GET</span> /api/full_sync</h6>
                                         </div>
                                         <div class="card-body">
-                                            <p class="small mb-2">Get all data in one call (movies, TV shows, and schedule)</p>
-                                            <button class="btn btn-outline-primary btn-sm" onclick="testAPI('/api/full_sync')">Test Endpoint</button>
+                                            <p class="small mb-2">Get all data in one call with extended metadata and library stats</p>
+                                            <p class="small text-muted mb-2">Parameters: ?days=7 (1-30 days)</p>
+                                            <button class="btn btn-outline-primary btn-sm" onclick="testAPI('/api/full_sync?days=7')">Test Endpoint</button>
                                         </div>
                                     </div>
                                 </div>
