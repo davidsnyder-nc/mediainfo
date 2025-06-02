@@ -541,53 +541,65 @@
                             <h5 class="mb-3">Available Endpoints</h5>
                             <p><strong>Base URL:</strong> <span id="baseUrl">Loading...</span></p>
                             
-                            <div class="card mb-3">
-                                <div class="card-header">
-                                    <h6 class="mb-0"><span class="badge bg-success">GET</span> /api/status</h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-header">
+                                            <h6 class="mb-0"><span class="badge bg-success">GET</span> /api/status</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="small mb-2">Get current status of all services</p>
+                                            <button class="btn btn-outline-primary btn-sm" onclick="testAPI('/api/status')">Test Endpoint</button>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="card-body">
-                                    <p><strong>Description:</strong> Get current status of all services</p>
-                                    <button class="btn btn-outline-primary btn-sm" onclick="testAPI('/api/status')">Test Endpoint</button>
-                                </div>
-                            </div>
 
-                            <div class="card mb-3">
-                                <div class="card-header">
-                                    <h6 class="mb-0"><span class="badge bg-success">GET</span> /api/config</h6>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-header">
+                                            <h6 class="mb-0"><span class="badge bg-success">GET</span> /api/config</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="small mb-2">Get current configuration settings</p>
+                                            <button class="btn btn-outline-primary btn-sm" onclick="testAPI('/api/config')">Test Endpoint</button>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="card-body">
-                                    <p><strong>Description:</strong> Get current configuration settings</p>
-                                    <button class="btn btn-outline-primary btn-sm" onclick="testAPI('/api/config')">Test Endpoint</button>
-                                </div>
-                            </div>
 
-                            <div class="card mb-3">
-                                <div class="card-header">
-                                    <h6 class="mb-0"><span class="badge bg-success">GET</span> /api/recent</h6>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-header">
+                                            <h6 class="mb-0"><span class="badge bg-success">GET</span> /api/recent</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="small mb-2">Get recently added movies and TV shows</p>
+                                            <button class="btn btn-outline-primary btn-sm" onclick="testAPI('/api/recent')">Test Endpoint</button>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="card-body">
-                                    <p><strong>Description:</strong> Get recently added movies and TV shows</p>
-                                    <button class="btn btn-outline-primary btn-sm" onclick="testAPI('/api/recent')">Test Endpoint</button>
-                                </div>
-                            </div>
 
-                            <div class="card mb-3">
-                                <div class="card-header">
-                                    <h6 class="mb-0"><span class="badge bg-success">GET</span> /api/schedule</h6>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-header">
+                                            <h6 class="mb-0"><span class="badge bg-success">GET</span> /api/schedule</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="small mb-2">Get today's TV schedule from Sonarr</p>
+                                            <button class="btn btn-outline-primary btn-sm" onclick="testAPI('/api/schedule')">Test Endpoint</button>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="card-body">
-                                    <p><strong>Description:</strong> Get today's TV schedule from Sonarr</p>
-                                    <button class="btn btn-outline-primary btn-sm" onclick="testAPI('/api/schedule')">Test Endpoint</button>
-                                </div>
-                            </div>
 
-                            <div class="card mb-3">
-                                <div class="card-header">
-                                    <h6 class="mb-0"><span class="badge bg-success">GET</span> /api/full_sync</h6>
-                                </div>
-                                <div class="card-body">
-                                    <p><strong>Description:</strong> Get all data in one call</p>
-                                    <button class="btn btn-outline-primary btn-sm" onclick="testAPI('/api/full_sync')">Test Endpoint</button>
+                                <div class="col-md-12 mb-3">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h6 class="mb-0"><span class="badge bg-success">GET</span> /api/full_sync</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="small mb-2">Get all data in one call (movies, TV shows, and schedule)</p>
+                                            <button class="btn btn-outline-primary btn-sm" onclick="testAPI('/api/full_sync')">Test Endpoint</button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
