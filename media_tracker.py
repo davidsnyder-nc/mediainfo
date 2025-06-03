@@ -144,50 +144,83 @@ class MediaTracker:
         
         # Check if Sonarr is configured
         if not self.config.get('sonarr_url') or not self.config.get('sonarr_api_key'):
+            logging.error("Sonarr not configured - missing URL or API key")
             return scheduled_shows
         
         try:
             today = datetime.now().strftime('%Y-%m-%d')
             tomorrow = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
+            logging.info(f"Getting Sonarr schedule for {today} to {tomorrow}")
             
             # First get all series to create a lookup table
             series_url = urljoin(self.config['sonarr_url'], '/api/v3/series')
             headers = {'X-Api-Key': self.config['sonarr_api_key']}
             
+            logging.info(f"Fetching series from {series_url}")
             series_response = self.session.get(series_url, headers=headers)
             series_response.raise_for_status()
             all_series = series_response.json()
+            logging.info(f"Found {len(all_series)} series in Sonarr")
             
             # Create a lookup dictionary for series ID to title
             series_lookup = {series['id']: series['title'] for series in all_series}
             
-            # Now get the calendar data
-            calendar_url = urljoin(self.config['sonarr_url'], f'/api/v3/calendar?start={today}&end={tomorrow}')
+            # Now get the calendar data with unmonitored=false to get all shows
+            calendar_url = urljoin(self.config['sonarr_url'], '/api/v3/calendar')
+            params = {
+                'start': today,
+                'end': tomorrow,
+                'unmonitored': 'false',
+                'includeSeries': 'true'
+            }
             
-            calendar_response = self.session.get(calendar_url, headers=headers)
+            logging.info(f"Fetching calendar from {calendar_url} with params: {params}")
+            calendar_response = self.session.get(calendar_url, headers=headers, params=params)
             calendar_response.raise_for_status()
             
             calendar_data = calendar_response.json()
-            logging.debug(f"Sonarr calendar response sample: {calendar_data[:1] if calendar_data else 'No data'}")
+            logging.info(f"Found {len(calendar_data)} episodes in calendar")
+            
+            # Log the first episode's data to see what we're getting
+            if calendar_data:
+                first_episode = calendar_data[0]
+                logging.info(f"Sample episode data: {json.dumps(first_episode, indent=2)}")
             
             for episode in calendar_data:
                 air_date = episode.get('airDate', episode.get('airDateUtc', ''))
-                if air_date and air_date.startswith(today):
-                    # Get series title from lookup table using seriesId
-                    series_id = episode.get('seriesId')
-                    series_title = series_lookup.get(series_id, 'Unknown Series')
-                    
-                    scheduled_shows.append({
-                        'series_title': series_title,
-                        'episode_title': episode.get('title', 'Unknown Episode'),
-                        'season': episode.get('seasonNumber', 'Unknown'),
-                        'episode': episode.get('episodeNumber', 'Unknown'),
-                        'air_date': air_date.split('T')[0] if 'T' in air_date else air_date
-                    })
+                if air_date:
+                    try:
+                        # Handle both UTC and local time formats
+                        if 'T' in air_date:
+                            air_date_obj = datetime.strptime(air_date.split('T')[0], '%Y-%m-%d')
+                        else:
+                            air_date_obj = datetime.strptime(air_date, '%Y-%m-%d')
+                        
+                        today_obj = datetime.strptime(today, '%Y-%m-%d')
+                        
+                        if air_date_obj.date() == today_obj.date():
+                            series_id = episode.get('seriesId')
+                            series_title = series_lookup.get(series_id, 'Unknown Series')
+                            logging.info(f"Found episode airing today: {series_title} S{episode.get('seasonNumber')}E{episode.get('episodeNumber')}")
+                            
+                            scheduled_shows.append({
+                                'series_title': series_title,
+                                'episode_title': episode.get('title', 'Unknown Episode'),
+                                'season': episode.get('seasonNumber', 'Unknown'),
+                                'episode': episode.get('episodeNumber', 'Unknown'),
+                                'air_date': air_date.split('T')[0] if 'T' in air_date else air_date
+                            })
+                        else:
+                            logging.debug(f"Episode not airing today: {air_date_obj.date()} != {today_obj.date()}")
+                    except ValueError as e:
+                        logging.error(f"Error parsing air date '{air_date}': {str(e)}")
+                        continue
         
         except Exception as e:
             logging.error(f"Error getting Sonarr schedule: {str(e)}")
+            logging.exception("Full traceback:")
         
+        logging.info(f"Returning {len(scheduled_shows)} scheduled shows for today")
         return scheduled_shows
     
     def write_to_files(self, movies, tv_shows, scheduled_shows):

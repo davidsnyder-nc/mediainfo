@@ -707,33 +707,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Dashboard Configuration Section -->
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <h5 class="mb-0">Dashboard Configuration</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="dashboard_days" class="form-label">Content History (Days)</label>
-                                        <input type="number" class="form-control" id="dashboard_days" name="dashboard_days" 
-                                               value="{{ config.get('dashboard_days', 3650) }}" min="1" max="3650">
-                                        <div class="form-text">Number of days of content history to show in the dashboard (1-3650)</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="dashboard_max_items" class="form-label">Maximum Items</label>
-                                        <input type="number" class="form-control" id="dashboard_max_items" name="dashboard_max_items" 
-                                               value="{{ config.get('dashboard_max_items', 100) }}" min="1" max="1000">
-                                        <div class="form-text">Maximum number of items to display in the dashboard (1-1000)</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Save Button -->
